@@ -3,6 +3,7 @@ import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import HeroSection from "./components/HeroSection";
+import ScrollColorTransition from "./components/ScrollColorTransition";
 import FeatureRow from "./components/FeatureRow";
 import WhySection from "./components/WhySection";
 import FeatureGrid from "./components/FeatureGrid";
@@ -25,14 +26,15 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       <Navbar onJoinClick={scrollToForm} />
-      {/* Dark hero */}
       <HeroSection formRef={heroFormRef} />
-      {/* White middle sections */}
-      <FeatureRow />
+      {/* Scroll-driven dark → white background transition wrapping the first section */}
+      <ScrollColorTransition>
+        <FeatureRow />
+      </ScrollColorTransition>
+      {/* Remaining white sections */}
       <WhySection />
       <FeatureGrid />
       <WaitlistCTA />
-      {/* Dark footer */}
       <Footer />
     </div>
   );
