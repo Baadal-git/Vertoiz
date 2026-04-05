@@ -1,41 +1,85 @@
 import React, { useRef, useEffect } from "react";
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// VISUAL CONCEPT
+//   A wireframe sphere MESH built from two sets of lines:
+//     • Latitude rings   – horizontal circles (N_LAT of them)
+//     • Longitude lines  – vertical great-circles through the poles (N_LON of them)
+//   Together they form a visible dot-grid on a sphere surface.
+//
+//   Viewed with perspective projection the structure reads as a TUNNEL / PORTAL:
+//     – front hemisphere fans out to the viewport edges (wrapping the heading)
+//     – back hemisphere converges to a vanishing point behind the text
+//
+//   A COHERENT wave travels across the mesh: every point is displaced by the
+//   same function of its grid address (φ, θ) + time, so the whole surface
+//   ripples together like a veil of fabric — not independent random dots.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const N_LAT        = 13;   // horizontal rings
+const N_LON        = 20;   // vertical meridian great-circles
+const DOTS_PER_LAT = 270;  // equatorial-ring dot count (scales with sin φ at other latitudes)
+const DOTS_PER_LON = 140;  // dots per meridian (pole to pole)
+
+// Large radius so the front hemisphere clearly wraps beyond the heading
+const RADIUS_FACTOR = 0.52;
+// Tight FOV → stronger perspective depth / tunnel illusion
+const FOV           = 680;
+
 // ─────────────────────────────────────────────────────────────────────────────
-// DESIGN GOALS
-//   • Sphere formed by VISIBLE latitude-ring lines of closely-spaced white dots
-//   • Rings are spaced far enough apart that each ring is a distinct visual curve
-//   • Multi-frequency wave ripples across the surface so it feels fluid & alive
-//   • Perspective projection + depth shading gives genuine 3-D depth
+// Build the mesh ONCE. Returns an array of { phi, theta, sz, br, pj } objects.
 // ─────────────────────────────────────────────────────────────────────────────
+function buildMesh() {
+  const pts = [];
 
-const N_RINGS        = 24;   // few enough that the gap between rings is legible
-const DOTS_PER_UNIT  = 220;  // dots on the equatorial ring; others scale with sin(φ)
-const RADIUS_FACTOR  = 0.46; // fraction of min(W, H) → fills viewport nicely
+  // ── Latitude rings ──────────────────────────────────────────────────────────
+  for (let ri = 0; ri < N_LAT; ri++) {
+    const phi    = (Math.PI * (ri + 0.5)) / N_LAT;   // 0 < phi < PI
+    const sinPhi = Math.sin(phi);
+    // More dots near the equator, fewer toward the poles
+    const count  = Math.max(10, Math.round(DOTS_PER_LAT * sinPhi));
 
-function createParticles() {
-  const particles = [];
-  for (let ri = 0; ri < N_RINGS; ri++) {
-    // Spread evenly from just past the north pole to just past the south pole
-    const phi = (Math.PI * (ri + 0.5)) / N_RINGS;
-    const ringCircumference = Math.sin(phi); // 0 at poles, 1 at equator
-    // Dense enough that dots look like a continuous curve; minimum 12
-    const dotsInRing = Math.max(12, Math.round(DOTS_PER_UNIT * ringCircumference));
-
-    for (let di = 0; di < dotsInRing; di++) {
-      const theta = (2 * Math.PI * di) / dotsInRing;
-      particles.push({
-        phi,
-        theta,
-        // Small per-particle jitter keeps the animation textured
-        sizeBase:       0.85 + Math.random() * 1.10,
-        brightnessBase: 0.60 + Math.random() * 0.40,
-        phaseJitter:    (Math.random() - 0.5) * 0.55,
+    for (let di = 0; di < count; di++) {
+      const theta = (2 * Math.PI * di) / count;
+      pts.push({
+        phi, theta,
+        sz: 0.88 + Math.random() * 0.90,
+        br: 0.72 + Math.random() * 0.28,
+        pj: (Math.random() - 0.5) * 0.36,    // subtle phase jitter
       });
     }
   }
-  return particles;
+
+  // ── Longitude meridians (great circles through both poles) ─────────────────
+  // Each meridian lives in two half-circles: theta = θ_i and theta = θ_i + PI
+  for (let li = 0; li < N_LON; li++) {
+    const tBase = (Math.PI * li) / N_LON;     // spans 0…PI (N_LON unique planes)
+
+    for (let di = 0; di < DOTS_PER_LON; di++) {
+      // phi goes from 0 (north pole) to PI (south pole)
+      const phi = (Math.PI * di) / (DOTS_PER_LON - 1);
+
+      // front-facing half
+      pts.push({
+        phi, theta: tBase,
+        sz: 0.82 + Math.random() * 0.85,
+        br: 0.68 + Math.random() * 0.32,
+        pj: (Math.random() - 0.5) * 0.36,
+      });
+      // back-facing half (completes the great circle)
+      pts.push({
+        phi, theta: tBase + Math.PI,
+        sz: 0.82 + Math.random() * 0.85,
+        br: 0.68 + Math.random() * 0.32,
+        pj: (Math.random() - 0.5) * 0.36,
+      });
+    }
+  }
+
+  return pts;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
 const AnimatedBackground = () => {
   const canvasRef = useRef(null);
 
@@ -46,7 +90,8 @@ const AnimatedBackground = () => {
     let animId;
     let W, H;
 
-    const particles = createParticles();
+    // Build mesh once — positions are (phi, theta) only; displacement applied each frame
+    const mesh = buildMesh();
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -61,9 +106,10 @@ const AnimatedBackground = () => {
     resize();
     window.addEventListener("resize", resize);
 
+    // ── Main render loop ────────────────────────────────────────────────────
     const draw = (ms) => {
-      // Very slow time axis — full Y-rotation every ~26 s
-      const t = ms * 0.00036;
+      // t advances by 1 per ~2.9 s  (full revolution ≈ 17.5 s at rotY speed)
+      const t = ms * 0.00034;
 
       ctx.fillStyle = "#0a0a0a";
       ctx.fillRect(0, 0, W, H);
@@ -71,89 +117,102 @@ const AnimatedBackground = () => {
       const cx = W / 2;
       const cy = H / 2;
       const R  = Math.min(W, H) * RADIUS_FACTOR;
-      const wA = R * 0.075; // wave amplitude = 7.5% of radius
 
-      // ── Rotation matrices ──────────────────────────────────────────────
-      const rotY = t * 0.36;                           // slow continuous spin
-      const rotX = Math.sin(t * 0.21) * 0.14;          // gentle nod
+      // Wave amplitude: 6.5 % of radius for visible-but-not-chaotic ripples
+      const wA = R * 0.065;
+
+      // ── Slow global rotation ─────────────────────────────────────────────
+      const rotY = t * 0.30;                        // ~21 s per revolution
+      const rotX = Math.sin(t * 0.18) * 0.12;       // gentle nodding tilt
       const cY = Math.cos(rotY), sY = Math.sin(rotY);
       const cX = Math.cos(rotX), sX = Math.sin(rotX);
 
       const proj = [];
 
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
+      for (let i = 0; i < mesh.length; i++) {
+        const p = mesh[i];
 
-        // ── Multi-frequency wave displacement (incommensurable freqs) ──
-        //    Creates organic, never-repeating ripple across the surface
-        const w1 = Math.sin(p.phi * 5.1  + p.theta * 1.7  + t * 1.60 + p.phaseJitter) * wA;
-        const w2 = Math.sin(p.phi * 3.3  - p.theta * 0.85 + t * 1.05) * wA * 0.50;
-        const w3 = Math.sin(p.theta * 3.9 + t * 0.88)                   * wA * 0.26;
-        const w4 = Math.sin(t * 0.52 + p.phi * 1.5)                     * wA * 0.17;
+        // ──────────────────────────────────────────────────────────────────
+        // COHERENT MESH WAVE
+        // Every point is displaced by a FUNCTION OF ITS GRID ADDRESS (φ, θ)
+        // plus time — so the entire mesh deforms as one continuous surface.
+        //
+        // Four incommensurable wave terms create organic complexity:
+        //   w1 – primary band wave traveling along latitude
+        //   w2 – longitudinal wave traveling along meridians
+        //   w3 – diagonal wave (interference pattern)
+        //   w4 – slow global "breathing" pulse
+        // ──────────────────────────────────────────────────────────────────
+        const w1 = Math.sin(p.phi  * 4.8 + t * 1.55 + p.pj)          * wA;
+        const w2 = Math.sin(p.theta * 2.2 + t * 1.08)                 * wA * 0.55;
+        const w3 = Math.sin(p.phi  * 3.1 - p.theta * 1.15 + t * 0.85)* wA * 0.38;
+        const w4 = Math.sin(t * 0.46 + p.phi * 1.7)                   * wA * 0.17;
 
         const r = R + w1 + w2 + w3 + w4;
 
-        // ── Spherical → Cartesian ─────────────────────────────────────
-        const sp = Math.sin(p.phi), cp = Math.cos(p.phi);
+        // ── Spherical → Cartesian ─────────────────────────────────────────
+        const sp = Math.sin(p.phi),  cp = Math.cos(p.phi);
         const st = Math.sin(p.theta), ct = Math.cos(p.theta);
-        let x = r * sp * ct;
-        let y = r * cp;
-        let z = r * sp * st;
+        const x  = r * sp * ct;
+        const y  = r * cp;
+        const z  = r * sp * st;
 
-        // ── Rotate around Y ───────────────────────────────────────────
-        const rx = x * cY - z * sY;
-        const rz = x * sY + z * cY;
+        // ── Rotate around Y axis (main spin) ─────────────────────────────
+        const rx  =  x * cY - z * sY;
+        const rzA =  x * sY + z * cY;
 
-        // ── Rotate around X ───────────────────────────────────────────
-        const ry  = y * cX - rz * sX;
-        const rz2 = y * sX + rz * cX;
+        // ── Rotate around X axis (nod) ───────────────────────────────────
+        const ry  =  y * cX - rzA * sX;
+        const rz  =  y * sX + rzA * cX;
 
-        // ── Perspective ───────────────────────────────────────────────
-        const fov   = 1000;
-        const scale = fov / (fov + rz2);
+        // ── Perspective projection ────────────────────────────────────────
+        const scale = FOV / (FOV + rz);
         const px = cx + rx * scale;
         const py = cy + ry * scale;
 
-        // Depth 0 (far back) → 1 (right in front)
+        // Normalised depth: 0 = farthest back  →  1 = closest to viewer
+        // Calibrated so the nearest point of the sphere maps to depthN ≈ 0.98
         const depthN = Math.max(0, Math.min(1,
-          (rz2 + R * 1.5) / (R * 3.0)
+          (rz + R * 1.08) / (R * 2.16)
         ));
 
-        proj.push({ x: px, y: py, depth: rz2, depthN, scale, size: p.sizeBase, bri: p.brightnessBase });
+        proj.push({ x: px, y: py, depth: rz, depthN, scale, sz: p.sz, br: p.br });
       }
 
-      // Back-to-front for correct occlusion
+      // ── Painter's sort: back → front (correct occlusion) ─────────────────
       proj.sort((a, b) => a.depth - b.depth);
 
+      // ── Draw ──────────────────────────────────────────────────────────────
       for (let i = 0; i < proj.length; i++) {
         const p = proj[i];
 
-        // Depth → opacity with strong cubic falloff for dramatic 3-D depth
-        // Front (depthN≈1): ~0.85 opacity  |  Back (depthN≈0): ~0.04 opacity
-        const d3 = p.depthN * p.depthN * p.depthN;
-        const opacity = (0.04 + d3 * 0.82) * p.bri;
+        // Cubic falloff: front vivid, back nearly invisible
+        //   front (depthN≈0.98) → d3≈0.94 → alpha ≈ 0.84 × br
+        //   back  (depthN≈0.02) → d3≈0.00 → alpha ≈ 0.04 × br
+        const d3    = p.depthN * p.depthN * p.depthN;
+        const alpha = Math.min(1, (0.040 + d3 * 0.92) * p.br);
 
-        // Dot size: front dots are notably larger than back dots
-        const dotR = Math.max(0.40, p.size * p.scale * (0.60 + p.depthN * 1.20));
+        // Dot size — front dots are noticeably larger than back dots
+        const dotR = Math.max(0.35, p.sz * p.scale * (0.50 + p.depthN * 1.25));
 
-        // Luminous halo for the front-facing hemisphere — gives 3-D glow
+        // Soft luminous halo on the front hemisphere — creates 3-D volume
         if (p.depthN > 0.45) {
-          const gf        = (p.depthN - 0.45) / 0.55;  // 0→1
-          const glowAlpha = gf * gf * 0.32 * p.bri;
-          const glowR     = dotR * 5.0;
-          const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowR);
-          grd.addColorStop(0, `rgba(200, 218, 255, ${glowAlpha})`);
-          grd.addColorStop(1, "rgba(200, 218, 255, 0)");
+          const gf = (p.depthN - 0.45) / 0.55;   // 0 → 1
+          const ga = gf * gf * 0.28 * p.br;
+          const gr = dotR * 5.2;
+          const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, gr);
+          grd.addColorStop(0, `rgba(195, 215, 255, ${ga})`);
+          grd.addColorStop(1, "rgba(195, 215, 255, 0)");
           ctx.beginPath();
-          ctx.arc(p.x, p.y, glowR, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, gr, 0, Math.PI * 2);
           ctx.fillStyle = grd;
           ctx.fill();
         }
 
-        // Core dot — crisp cool-white tint
+        // Core dot — cool white-blue
         ctx.beginPath();
         ctx.arc(p.x, p.y, dotR, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(220, 232, 255, ${Math.min(1, opacity)})`;
+        ctx.fillStyle = `rgba(222, 234, 255, ${alpha})`;
         ctx.fill();
       }
 
@@ -161,6 +220,7 @@ const AnimatedBackground = () => {
     };
 
     animId = requestAnimationFrame(draw);
+
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
