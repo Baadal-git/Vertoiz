@@ -28,16 +28,18 @@ const Home = () => {
     <div className="min-h-screen">
       <Navbar onJoinClick={scrollToForm} />
       <HeroSection formRef={heroFormRef} />
-      {/* Scroll-driven dark → white background transition wrapping the first section */}
-      <ScrollColorTransition>
-        <FeatureRow />
-      </ScrollColorTransition>
-      {/* Remaining white sections */}
-      <WhySection />
-      <FeatureGrid />
-      <WaitlistCTA />
-      <FAQSection />
-      <Footer />
+      {/* All sections below the hero sit in a stacking layer above the fixed
+          particle canvas (z-index:0), so they always paint over it cleanly. */}
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <ScrollColorTransition>
+          <FeatureRow />
+        </ScrollColorTransition>
+        <WhySection />
+        <FeatureGrid />
+        <WaitlistCTA />
+        <FAQSection />
+        <Footer />
+      </div>
     </div>
   );
 };

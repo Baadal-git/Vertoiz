@@ -42,9 +42,12 @@ const ScrollColorTransition = ({ children }) => {
       {/* Zero-height sentinel — placed exactly at the Hero/FeatureRow boundary */}
       <div ref={sentinelRef} aria-hidden="true" style={{ height: 0, overflow: "hidden" }} />
 
-      {/* Snaps between #0a0a0a and #ffffff in 180ms — no gray in between */}
+      {/* Snaps between #0a0a0a and #ffffff in 180ms — no gray in between.
+          position:relative + zIndex:1 lifts it above the fixed canvas (zIndex:0). */}
       <div
         style={{
+          position: "relative",
+          zIndex: 1,
           backgroundColor: isWhite ? "#ffffff" : "#0a0a0a",
           transition: "background-color 180ms ease",
         }}

@@ -212,17 +212,36 @@ const AnimatedBackground = () => {
 
     animId = requestAnimationFrame(draw);
 
+    // ── Scroll-driven opacity fade ──────────────────────────────────────────
+    // The canvas is position:fixed so it stays pinned to the viewport while
+    // the page scrolls beneath it — giving the "particles stay in place" feel.
+    // scrollY 0 → 100 px maps linearly to opacity 1 → 0.
+    // Direct DOM mutation avoids any React re-render overhead.
+    const handleScroll = () => {
+      canvas.style.opacity = String(Math.max(0, 1 - window.scrollY / 100));
+    };
+    handleScroll(); // seed correct value if page loads with scroll > 0
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full"
-      style={{ zIndex: 0 }}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        zIndex: 0,
+        pointerEvents: "none",  // never block clicks / hover on content below
+      }}
     />
   );
 };
