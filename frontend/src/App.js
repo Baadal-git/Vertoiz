@@ -7,6 +7,7 @@ import ScrollColorTransition from "./components/ScrollColorTransition";
 import FeatureRow from "./components/FeatureRow";
 import WhySection from "./components/WhySection";
 import FeatureGrid from "./components/FeatureGrid";
+import FAQSection from "./components/FAQSection";
 import WaitlistCTA from "./components/WaitlistCTA";
 import Footer from "./components/Footer";
 
@@ -35,6 +36,7 @@ const Home = () => {
       <WhySection />
       <FeatureGrid />
       <WaitlistCTA />
+      <FAQSection />
       <Footer />
     </div>
   );

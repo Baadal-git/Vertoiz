@@ -94,6 +94,45 @@ export const waitlistCTAData = {
   inputPlaceholder: "Enter your email",
 };
 
+export const faqData = [
+  {
+    id: 1,
+    question: "What type of projects does Vertoiz work with?",
+    answer:
+      "Vertoiz is designed for any backend-heavy project built with AI-assisted coding tools. Whether you're shipping a SaaS product, a real-time multiplayer app, or a complex API layer, Vertoiz enforces architecture patterns that keep your codebase production-ready.",
+  },
+  {
+    id: 2,
+    question: "Do I need to change my existing workflow?",
+    answer:
+      "Not at all. Vertoiz integrates directly into your IDE and runs alongside your existing AI coding tools. It watches how your backend is structured in real-time and flags issues without interrupting your flow.",
+  },
+  {
+    id: 3,
+    question: "How is this different from a linter or code formatter?",
+    answer:
+      "Linters catch syntax issues. Vertoiz catches architecture issues — things like missing separation of concerns, insecure data flow patterns, and scalability bottlenecks that no linter can detect.",
+  },
+  {
+    id: 4,
+    question: "When will Vertoiz be available?",
+    answer:
+      "We're currently in a closed early-access phase. Join the waitlist and you'll be among the first to get access when we open the next batch of invites.",
+  },
+  {
+    id: 5,
+    question: "Is Vertoiz free to use?",
+    answer:
+      "We'll offer a generous free tier for individual developers. Team and enterprise plans with advanced enforcement rules and CI/CD integration will be available at launch.",
+  },
+  {
+    id: 6,
+    question: "Will there be ongoing support after launch?",
+    answer:
+      "Yes. We provide continuous updates to our architecture pattern library, regular support, and a community channel for feedback and feature requests.",
+  },
+];
+
 export const footerData = {
   logo: "Vertoiz",
   copyright: `© ${new Date().getFullYear()} Vertoiz. All rights reserved.`,
