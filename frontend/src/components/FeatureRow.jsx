@@ -55,7 +55,7 @@ const FeatureCard = ({ label, description }) => (
 );
 
 const FeatureRow = () => (
-  <section className="py-28 sm:py-36 px-6">
+  <section className="bg-white py-28 sm:py-36 px-6">
     <div className="max-w-6xl mx-auto">
       <motion.h2
         initial="hidden"

@@ -1,31 +1,57 @@
-import React, { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
 
+/**
+ * ScrollColorTransition
+ *
+ * BEFORE: framer-motion useTransform linearly faded rgb(10,10,10) → rgb(255,255,255)
+ *         as scrollYProgress advanced — created the muddy-gray middle ground.
+ *
+ * NOW: a zero-height sentinel div sits exactly at the Hero / content boundary.
+ *      IntersectionObserver watches it. The moment it crosses above the viewport
+ *      top (user has fully scrolled past the hero), a boolean flips and a 180ms
+ *      CSS transition snaps the background to pure white.
+ *      Scrolling back reverses the snap with the same 180ms.
+ *      There is no interpolation — it is either #0a0a0a or #ffffff.
+ */
 const ScrollColorTransition = ({ children }) => {
-  const ref = useRef(null);
+  const sentinelRef = useRef(null);
+  const [isWhite, setIsWhite] = useState(false);
 
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-  });
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
 
-  // Interpolate background from near-black to white across this section
-  const r = useTransform(scrollYProgress, [0, 0.4], [10, 255]);
-  const g = useTransform(scrollYProgress, [0, 0.4], [10, 255]);
-  const b = useTransform(scrollYProgress, [0, 0.4], [10, 255]);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // boundingClientRect.top < 0  →  sentinel scrolled above the viewport fold
+        // boundingClientRect.top ≥ 0  →  sentinel is at or below the fold
+        setIsWhite(entry.boundingClientRect.top < 0);
+      },
+      {
+        // threshold: 0 → fires the instant any part of the sentinel crosses the edge
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <motion.div
-      ref={ref}
-      style={{
-        backgroundColor: useTransform(
-          [r, g, b],
-          ([rv, gv, bv]) => `rgb(${Math.round(rv)}, ${Math.round(gv)}, ${Math.round(bv)})`
-        ),
-      }}
-    >
-      {children}
-    </motion.div>
+    <>
+      {/* Zero-height sentinel — placed exactly at the Hero/FeatureRow boundary */}
+      <div ref={sentinelRef} aria-hidden="true" style={{ height: 0, overflow: "hidden" }} />
+
+      {/* Snaps between #0a0a0a and #ffffff in 180ms — no gray in between */}
+      <div
+        style={{
+          backgroundColor: isWhite ? "#ffffff" : "#0a0a0a",
+          transition: "background-color 180ms ease",
+        }}
+      >
+        {children}
+      </div>
+    </>
   );
 };
 
