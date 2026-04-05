@@ -15,7 +15,6 @@ const Home = () => {
   const scrollToForm = () => {
     if (heroFormRef.current) {
       heroFormRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-      // Focus the input after scroll
       setTimeout(() => {
         const input = heroFormRef.current.querySelector("input");
         if (input) input.focus();
@@ -24,13 +23,16 @@ const Home = () => {
   };
 
   return (
-    <div className="bg-[#0a0a0a] min-h-screen">
+    <div className="min-h-screen">
       <Navbar onJoinClick={scrollToForm} />
+      {/* Dark hero */}
       <HeroSection formRef={heroFormRef} />
+      {/* White middle sections */}
       <FeatureRow />
       <WhySection />
       <FeatureGrid />
       <WaitlistCTA />
+      {/* Dark footer */}
       <Footer />
     </div>
   );
@@ -38,7 +40,7 @@ const Home = () => {
 
 function App() {
   return (
-    <div className="App">
+    <div>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />

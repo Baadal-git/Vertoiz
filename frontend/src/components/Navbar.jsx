@@ -14,14 +14,14 @@ const Navbar = ({ onJoinClick }) => {
 
   return (
     <nav
-      className="fixed top-5 left-1/2 -translate-x-1/2 z-50 transition-all duration-500"
+      className="fixed top-5 left-1/2 -translate-x-1/2 z-50"
       style={{ width: "min(600px, 90vw)" }}
     >
       <div
-        className={`flex items-center justify-between px-4 py-2.5 rounded-full border transition-all duration-500 ${
+        className={`flex items-center justify-between px-3 sm:px-4 py-2 rounded-full border transition-all duration-700 ${
           scrolled
-            ? "bg-[#111111]/95 border-white/10 backdrop-blur-xl shadow-2xl"
-            : "bg-[#111111]/70 border-white/[0.06] backdrop-blur-md"
+            ? "bg-[#0e0e0e]/95 border-white/10 backdrop-blur-xl shadow-2xl shadow-black/20"
+            : "bg-[#0e0e0e]/80 border-white/[0.06] backdrop-blur-md"
         }`}
       >
         {/* Animated Logo */}
@@ -39,7 +39,7 @@ const Navbar = ({ onJoinClick }) => {
         {/* CTA Button */}
         <button
           onClick={onJoinClick}
-          className="px-5 py-2 bg-white text-[#0a0a0a] text-sm font-medium rounded-full hover:bg-white/90 transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]"
+          className="px-5 py-2 bg-white text-[#0a0a0a] text-sm font-medium rounded-full hover:bg-white/90 active:scale-[0.97] transition-colors duration-300"
         >
           {navData.ctaText}
         </button>

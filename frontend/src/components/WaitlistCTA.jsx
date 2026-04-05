@@ -1,56 +1,53 @@
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { waitlistCTAData } from "../data/mock";
-import { useScrollAnimation } from "../hooks/useScrollAnimation";
 
 const WaitlistCTA = () => {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
-  const [ref, isVisible] = useScrollAnimation(0.15);
 
-  const validateEmail = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
+  const validateEmail = (em) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
-    if (!email.trim()) {
-      setError("Please enter your email.");
-      return;
-    }
-    if (!validateEmail(email)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
+    if (!email.trim()) { setError("Please enter your email."); return; }
+    if (!validateEmail(email)) { setError("Please enter a valid email address."); return; }
     setSubmitted(true);
     setEmail("");
   };
 
   return (
-    <section className="relative py-32 px-6">
-      {/* Subtle top/bottom borders */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+    <section className="bg-white py-32 sm:py-40 px-6 relative">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-[#e0e0e0] to-transparent" />
 
-      <div
-        ref={ref}
-        className={`max-w-2xl mx-auto text-center transition-all duration-700 ${
-          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-        }`}
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        className="max-w-2xl mx-auto text-center"
       >
-        <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-10 leading-tight tracking-tight">
+        <h2 className="text-3xl sm:text-4xl md:text-[52px] font-bold text-[#0a0a0a] mb-10 leading-[1.1] tracking-[-0.03em]">
           {waitlistCTAData.heading}
         </h2>
 
         {submitted ? (
-          <div className="inline-flex items-center gap-2 px-6 py-4 rounded-full bg-white/[0.06] border border-white/10 backdrop-blur-sm">
-            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <p className="text-white/80 text-sm sm:text-base">
-              You're on the list. We'll be in touch.
-            </p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="inline-flex items-center gap-2.5 px-6 py-4 rounded-full bg-[#f5f5f5] border border-[#e5e5e5]"
+          >
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <p className="text-[#333] text-sm sm:text-base">You're on the list. We'll be in touch.</p>
+          </motion.div>
         ) : (
-          <form
+          <motion.form
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.15 }}
             onSubmit={handleSubmit}
             className="flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto"
           >
@@ -58,30 +55,18 @@ const WaitlistCTA = () => {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setError("");
-                }}
+                onChange={(e) => { setEmail(e.target.value); setError(""); }}
                 placeholder={waitlistCTAData.inputPlaceholder}
-                className="w-full px-5 py-3.5 bg-white/[0.06] border border-white/10 rounded-full text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-white/25 focus:bg-white/[0.08] transition-all duration-300"
+                className="w-full px-5 py-3.5 bg-[#f5f5f5] border border-[#e0e0e0] rounded-full text-[#0a0a0a] text-sm placeholder:text-[#aaa] focus:outline-none focus:border-[#bbb] focus:bg-[#f0f0f0] transition-all duration-300"
               />
-              {error && (
-                <p className="absolute -bottom-6 left-5 text-red-400/80 text-xs">
-                  {error}
-                </p>
-              )}
+              {error && <p className="absolute -bottom-6 left-5 text-red-500/80 text-xs">{error}</p>}
             </div>
-            <button
-              type="submit"
-              className="w-full sm:w-auto px-7 py-3.5 bg-white text-[#0a0a0a] text-sm font-semibold rounded-full hover:bg-white/90 transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] whitespace-nowrap flex-shrink-0"
-            >
+            <button type="submit" className="w-full sm:w-auto px-7 py-3.5 bg-[#0a0a0a] text-white text-sm font-semibold rounded-full hover:bg-[#1a1a1a] active:scale-[0.97] transition-colors duration-300 whitespace-nowrap flex-shrink-0">
               {waitlistCTAData.ctaText}
             </button>
-          </form>
+          </motion.form>
         )}
-      </div>
-
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+      </motion.div>
     </section>
   );
 };

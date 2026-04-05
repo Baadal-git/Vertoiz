@@ -8,7 +8,6 @@ module.exports = {
   theme: {
   	extend: {
   		fontFamily: {
-  			'display': ['"DM Serif Display"', 'serif'],
   			'sans': ['Inter', 'system-ui', 'sans-serif'],
   		},
   		borderRadius: {

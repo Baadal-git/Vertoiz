@@ -1,21 +1,9 @@
-/* Vertoiz Waitlist - Global Styles */
+/* Vertoiz Waitlist Styles */
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Reset */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-
-body {
-  background-color: #0a0a0a;
-  color: #ffffff;
-  overflow-x: hidden;
 }
 
 /* Logo morph animation */
@@ -49,51 +37,10 @@ body {
   }
 }
 
-/* Fade-up animation */
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .animate-logo-morph {
   animation: logo-morph 8s ease-in-out infinite;
 }
 
 .animate-logo-shine {
   animation: logo-shine 4s ease-in-out infinite;
-}
-
-.animate-fade-up {
-  animation: fade-up 0.8s ease-out forwards;
-  opacity: 0;
-}
-
-/* Selection color */
-::selection {
-  background-color: rgba(200, 160, 232, 0.3);
-  color: #ffffff;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #0a0a0a;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
 }
