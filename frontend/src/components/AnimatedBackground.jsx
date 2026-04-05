@@ -1,83 +1,72 @@
 import React, { useRef, useEffect } from "react";
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// VISUAL CONCEPT
+// VISUAL CONCEPT — "FLOWING RIVER / RIBBON OF DOTS"
 //
-//   A wireframe sphere mesh (latitude rings + longitude meridians) where every
-//   line is deformed by TANGENTIAL displacement so the lines look like
-//   ribbons flowing in wind rather than rigid geometric circles.
+//   NO SPHERE. This is a parametric open ribbon in 3-D space.
 //
-//   KEY TECHNIQUE — three-component surface displacement per point:
-//
-//     position = r·r̂  +  dPhi·R·φ̂  +  dTheta·R·θ̂
-//
-//   where r̂, φ̂, θ̂ are the three orthogonal surface basis vectors:
-//     r̂     = (sinφ·cosθ,  cosφ,  sinφ·sinθ)   ← radial
-//     φ̂     = (cosφ·cosθ, -sinφ,  cosφ·sinθ)   ← along meridian
-//     θ̂     = (−sinθ,      0,     cosθ)          ← along latitude
-//
-//   dPhi  (φ̂ component) — moves dots up/down along the sphere surface.
-//         For a lat ring (fixed φ, varying θ) this waves the ring up and down
-//         → looks like a ribbon wrapping around the sphere.
-//
-//   dTheta (θ̂ component) — moves dots sideways along the sphere surface.
-//          For a lon line (fixed θ, varying φ) this bends the line left/right
-//          → looks like a ribbon hanging and swaying.
-//
-//   Multiple incommensurable wave frequencies make the motion organic and
-//   non-repeating. The waves travel across the whole surface coherently.
+//   Architecture:
+//     • A SPINE curve sweeps across the viewport (u = 0 → 1).
+//       The spine is a gentle sinusoidal arc — NOT a closed loop.
+//     • N_STRANDS strands fan out perpendicular to the spine,
+//       forming the ribbon's thickness.
+//     • Each strand has a Gaussian brightness falloff from the
+//       ribbon centre → edge so the ribbon looks dense in the
+//       core and dissolves at its borders.
+//     • End-caps fade to zero so the ribbon tapers at both tips.
+//     • Wave animation is applied ALONG the ribbon (u-direction)
+//       so the whole ribbon ripples coherently like a river / veil.
+//     • A shallow perspective projection (Z-depth) makes strands at
+//       different depths appear larger/brighter, adding 3-D solidity.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const N_LAT        = 13;
-const N_LON        = 20;
-const DOTS_PER_LAT = 270;  // equatorial density (scales by sinφ at other rings)
-const DOTS_PER_LON = 140;  // pole-to-pole
+const N_STRANDS       = 24;   // strands across ribbon cross-section
+const DOTS_PER_STRAND = 380;  // dots along each strand's length
 
-const RADIUS_FACTOR = 0.52;
-const FOV           = 680;
+// How far the ribbon tilts away from horizontal (radians).
+const TILT = 0.50;
 
 // ─────────────────────────────────────────────────────────────────────────────
-function buildMesh() {
+// Build particle list.  Stores (u, v) grid address + per-particle constants.
+// All world-space calculations happen in the draw loop so they scale with
+// the canvas size on every frame.
+// ─────────────────────────────────────────────────────────────────────────────
+function buildRibbon() {
   const pts = [];
 
-  // Latitude rings
-  for (let ri = 0; ri < N_LAT; ri++) {
-    const phi   = (Math.PI * (ri + 0.5)) / N_LAT;
-    const count = Math.max(10, Math.round(DOTS_PER_LAT * Math.sin(phi)));
-    for (let di = 0; di < count; di++) {
-      const theta = (2 * Math.PI * di) / count;
+  for (let si = 0; si < N_STRANDS; si++) {
+    // v ∈ [-1, 1] — position across the ribbon width
+    const v       = (si / (N_STRANDS - 1)) * 2 - 1;
+    // Gaussian falloff: centre strands bright, edge strands dim
+    const vFade   = Math.exp(-v * v * 2.8);
+
+    for (let di = 0; di < DOTS_PER_STRAND; di++) {
+      // u ∈ [0, 1] — position along the ribbon length
+      const u = di / (DOTS_PER_STRAND - 1);
+
+      // Smooth fade-in/out at both tips (avoids hard cut-off)
+      const uFade = smoothstep(0, 0.12, u) * smoothstep(1, 0.88, u);
+
+      // Combined brightness weight
+      const weight = vFade * uFade;
+      if (weight < 0.012) continue; // skip invisible particles
+
       pts.push({
-        phi, theta,
-        sz: 0.85 + Math.random() * 0.92,
-        br: 0.70 + Math.random() * 0.30,
-        pj: (Math.random() - 0.5) * 0.50,
+        u, v,
+        weight,
+        sz:  0.75 + Math.random() * 1.10,
+        br:  0.72 + Math.random() * 0.28,
+        // Per-particle phase jitter — keeps the ripple textured, not glassy
+        pj:  Math.random() * Math.PI * 2,
       });
     }
   }
-
-  // Longitude meridians
-  for (let li = 0; li < N_LON; li++) {
-    const tBase = (Math.PI * li) / N_LON;
-    for (let di = 0; di < DOTS_PER_LON; di++) {
-      const phi = (Math.PI * di) / (DOTS_PER_LON - 1);
-      // front half
-      pts.push({
-        phi, theta: tBase,
-        sz: 0.80 + Math.random() * 0.88,
-        br: 0.66 + Math.random() * 0.34,
-        pj: (Math.random() - 0.5) * 0.50,
-      });
-      // back half
-      pts.push({
-        phi, theta: tBase + Math.PI,
-        sz: 0.80 + Math.random() * 0.88,
-        br: 0.66 + Math.random() * 0.34,
-        pj: (Math.random() - 0.5) * 0.50,
-      });
-    }
-  }
-
   return pts;
+}
+
+function smoothstep(edge0, edge1, x) {
+  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -91,7 +80,7 @@ const AnimatedBackground = () => {
     let animId;
     let W, H;
 
-    const mesh = buildMesh();
+    const ribbon = buildRibbon();
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -106,118 +95,105 @@ const AnimatedBackground = () => {
     resize();
     window.addEventListener("resize", resize);
 
+    // ── Main render loop ────────────────────────────────────────────────────
     const draw = (ms) => {
-      const t = ms * 0.00032;  // slow time — full revolution ≈ 20 s
+      const t = ms * 0.00030;   // slow time axis
 
       ctx.fillStyle = "#0a0a0a";
       ctx.fillRect(0, 0, W, H);
 
+      // ── Ribbon dimensional constants (recomputed each frame so they
+      //    respond instantly to window resize) ───────────────────────────────
       const cx = W / 2;
       const cy = H / 2;
-      const R  = Math.min(W, H) * RADIUS_FACTOR;
 
-      // ── Tangential wave amplitude ──────────────────────────────────────────
-      // This is the key number — larger = more ribbon deformation.
-      // At 13% of R the lines visibly wave without becoming chaotic.
-      const wT = R * 0.13;   // tangential amplitude
-      const wR = R * 0.035;  // small radial "breathing" component
-
-      // ── Very slow global rotation so wave is the dominant motion ──────────
-      const rotY = t * 0.22;                       // ~28 s full spin
-      const rotX = Math.sin(t * 0.15) * 0.10;      // gentle slow nod
-      const cY = Math.cos(rotY), sY = Math.sin(rotY);
-      const cX = Math.cos(rotX), sX = Math.sin(rotX);
+      // Ribbon spans ~115 % of viewport width (bleeds off both edges)
+      const spanX      = W * 1.15;
+      // Half-width of ribbon cross-section (how "thick" the band is)
+      const halfWidth  = Math.min(W, H) * 0.26;
+      // Wave amplitudes — larger Y waves make the ribbon sweep up/down boldly
+      const waveAmpY   = H  * 0.065;
+      const waveAmpZ   = W  * 0.055;   // moderate Z so ribbon stays visible
+      // Depth used for perspective (smaller = less extreme depth variation)
+      const depthScale = W  * 0.14;
 
       const proj = [];
 
-      for (let i = 0; i < mesh.length; i++) {
-        const p = mesh[i];
+      for (let i = 0; i < ribbon.length; i++) {
+        const p = ribbon[i];
 
-        // ────────────────────────────────────────────────────────────────────
-        // TANGENTIAL DISPLACEMENT — breaks perfect circles into ribbons
-        //
-        // dPhi  → displacement along φ̂ (meridian direction, "up/down" on surface)
-        //   Waves in θ → each lat ring undulates vertically as θ advances
-        //   → ring looks like a sinusoidal ribbon wrapping the sphere
-        //
-        // dTheta → displacement along θ̂ (latitude direction, "sideways")
-        //   Waves in φ → each lon line sways left/right as φ advances
-        //   → meridian looks like a swinging ribbon from pole to pole
-        // ────────────────────────────────────────────────────────────────────
+        // ── SPINE POSITION (u-parameterised) ─────────────────────────────
+        // x: linear sweep from left to right (centred on viewport)
+        const sx = (p.u - 0.5) * spanX;
 
-        const dPhi =
-          Math.sin(p.theta * 2.8  + t * 1.25 + p.pj)        * wT * 0.90 +
-          Math.sin(p.theta * 1.55 - t * 0.78)                * wT * 0.48 +
-          Math.sin(p.theta * 4.10 + p.phi * 0.9 + t * 0.62) * wT * 0.24;
+        // y: static gentle S-curve so the ribbon isn't perfectly horizontal
+        const sy_static =
+          Math.sin(p.u * Math.PI * 1.80) * H * 0.10 +
+          Math.sin(p.u * Math.PI * 0.55) * H * 0.06;
 
-        const dTheta =
-          Math.sin(p.phi  * 3.40  + t * 1.15 + p.pj)        * wT * 0.85 +
-          Math.sin(p.phi  * 2.05  - t * 0.82)                * wT * 0.44 +
-          Math.sin(p.phi  * 4.70  + p.theta * 0.8 + t * 0.58)* wT * 0.22;
+        // z: static depth wave so the ribbon folds toward/away from viewer
+        const sz_static =
+          Math.cos(p.u * Math.PI * 1.20) * depthScale * 0.60 +
+          Math.cos(p.u * Math.PI * 2.50) * depthScale * 0.25;
 
-        // Small radial pulse (keeps some spherical breathing)
-        const dRad =
-          Math.sin(p.phi * 2.1 + p.theta * 1.3 + t * 0.70)  * wR;
+        // ── ANIMATED WAVE (travels along the ribbon length) ───────────────
+        // All strands at the same u share the same wave — coherent ripple.
+        const wave1 = Math.sin(p.u * 5.5  + t * 1.30 + p.pj * 0.3) * waveAmpY;
+        const wave2 = Math.sin(p.u * 3.2  - t * 0.90)               * waveAmpY * 0.55;
+        const wave3 = Math.sin(p.u * 8.0  + t * 0.65 + p.pj * 0.2) * waveAmpY * 0.22;
 
-        const r = R + dRad;
+        const waveZ1 = Math.cos(p.u * 4.1  + t * 1.10)              * waveAmpZ * 0.55;
+        const waveZ2 = Math.cos(p.u * 2.3  - t * 0.70)              * waveAmpZ * 0.30;
 
-        // ── Three surface basis vectors at (φ, θ) ─────────────────────────
-        const sp = Math.sin(p.phi),  cp = Math.cos(p.phi);
-        const st = Math.sin(p.theta), ct = Math.cos(p.theta);
+        const spineY = sy_static + wave1 + wave2 + wave3;
+        const spineZ = sz_static + waveZ1 + waveZ2;
 
-        // r̂     (radial)
-        const rHatX =  sp * ct,  rHatY =  cp,  rHatZ =  sp * st;
-        // φ̂     (along meridian — "upward" on surface)
-        const pHatX =  cp * ct,  pHatY = -sp,  pHatZ =  cp * st;
-        // θ̂     (along latitude — "sideways" on surface)
-        const tHatX = -st,       tHatY =  0,   tHatZ =  ct;
+        // ── CROSS-SECTION — fan strands out perpendicular to the viewing
+        //    plane, tilted by TILT so you see depth in the ribbon ───────────
+        const crossY = p.v * halfWidth * Math.cos(TILT);
+        const crossZ = p.v * halfWidth * Math.sin(TILT);
 
-        // ── Final displaced 3-D position ─────────────────────────────────
-        const x = r * rHatX  +  dPhi * pHatX  +  dTheta * tHatX;
-        const y = r * rHatY  +  dPhi * pHatY  +  dTheta * tHatY;
-        const z = r * rHatZ  +  dPhi * pHatZ  +  dTheta * tHatZ;
+        // ── FINAL 3-D WORLD POSITION ─────────────────────────────────────
+        const wx = sx;
+        const wy = spineY + crossY;
+        const wz = spineZ + crossZ;
 
-        // ── Rotate Y ──────────────────────────────────────────────────────
-        const rx  =  x * cY - z * sY;
-        const rzA =  x * sY + z * cY;
+        // ── PERSPECTIVE PROJECTION ───────────────────────────────────────
+        const fov   = 900;
+        const scale = fov / (fov + wz);
+        const px = cx + wx * scale;
+        const py = cy + wy * scale;
 
-        // ── Rotate X ──────────────────────────────────────────────────────
-        const ry  =  y * cX - rzA * sX;
-        const rz  =  y * sX + rzA * cX;
-
-        // ── Perspective projection ────────────────────────────────────────
-        const scale = FOV / (FOV + rz);
-        const px = cx + rx * scale;
-        const py = cy + ry * scale;
-
-        // depth 0 (far) → 1 (close)
+        // Depth normalised: 0 = far, 1 = close
         const depthN = Math.max(0, Math.min(1,
-          (rz + R * 1.10) / (R * 2.20)
+          (wz + depthScale * 2.0) / (depthScale * 4.0)
         ));
 
-        proj.push({ x: px, y: py, depth: rz, depthN, scale, sz: p.sz, br: p.br });
+        // Combine depth + ribbon-weight for final opacity — boosted base
+        const d2 = depthN * depthN;
+        const alpha = Math.min(1, (0.08 + d2 * 0.84) * p.br * p.weight);
+
+        if (alpha < 0.012) continue;
+
+        proj.push({ x: px, y: py, depth: wz, depthN, scale, sz: p.sz, br: p.br, alpha });
       }
 
-      // Back → front painter's sort
+      // Back → front
       proj.sort((a, b) => a.depth - b.depth);
 
       for (let i = 0; i < proj.length; i++) {
         const p = proj[i];
 
-        // Cubic depth curve: back near-invisible, front vivid
-        const d3    = p.depthN * p.depthN * p.depthN;
-        const alpha = Math.min(1, (0.038 + d3 * 0.90) * p.br);
+        const dotR = Math.max(0.35, p.sz * p.scale * (0.48 + p.depthN * 1.25));
 
-        const dotR = Math.max(0.35, p.sz * p.scale * (0.50 + p.depthN * 1.22));
-
-        // Soft luminous halo for front hemisphere
-        if (p.depthN > 0.48) {
-          const gf = (p.depthN - 0.48) / 0.52;
-          const ga = gf * gf * 0.26 * p.br;
-          const gr = dotR * 5.0;
+        // Glow halo for near particles
+        if (p.depthN > 0.50 && p.alpha > 0.10) {
+          const gf = (p.depthN - 0.50) / 0.50;
+          const ga = gf * gf * 0.24 * p.br * p.alpha;
+          const gr = dotR * 5.2;
           const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, gr);
-          grd.addColorStop(0, `rgba(195, 215, 255, ${ga})`);
-          grd.addColorStop(1, "rgba(195, 215, 255, 0)");
+          grd.addColorStop(0, `rgba(200, 218, 255, ${ga})`);
+          grd.addColorStop(1, "rgba(200, 218, 255, 0)");
           ctx.beginPath();
           ctx.arc(p.x, p.y, gr, 0, Math.PI * 2);
           ctx.fillStyle = grd;
@@ -226,7 +202,7 @@ const AnimatedBackground = () => {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, dotR, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(222, 234, 255, ${alpha})`;
+        ctx.fillStyle = `rgba(222, 234, 255, ${p.alpha})`;
         ctx.fill();
       }
 
