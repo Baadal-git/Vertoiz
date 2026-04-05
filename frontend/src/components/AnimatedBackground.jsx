@@ -20,8 +20,8 @@ import React, { useRef, useEffect } from "react";
 //       different depths appear larger/brighter, adding 3-D solidity.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const N_STRANDS       = 24;   // strands across ribbon cross-section
-const DOTS_PER_STRAND = 380;  // dots along each strand's length
+const N_STRANDS       = 31;   // strands across ribbon cross-section (+30%)
+const DOTS_PER_STRAND = 494;  // dots along each strand's length (+30%)
 
 // How far the ribbon tilts away from horizontal (radians).
 const TILT = 0.50;
@@ -37,8 +37,9 @@ function buildRibbon() {
   for (let si = 0; si < N_STRANDS; si++) {
     // v ∈ [-1, 1] — position across the ribbon width
     const v       = (si / (N_STRANDS - 1)) * 2 - 1;
-    // Gaussian falloff: centre strands bright, edge strands dim
-    const vFade   = Math.exp(-v * v * 2.8);
+    // Flat falloff: low exponent = even brightness across the full ribbon width
+    // (was 2.8 which created a bright core + dim edges — now near-uniform)
+    const vFade   = Math.exp(-v * v * 0.90);
 
     for (let di = 0; di < DOTS_PER_STRAND; di++) {
       // u ∈ [0, 1] — position along the ribbon length
@@ -49,7 +50,7 @@ function buildRibbon() {
 
       // Combined brightness weight
       const weight = vFade * uFade;
-      if (weight < 0.012) continue; // skip invisible particles
+      if (weight < 0.005) continue; // lower cutoff keeps edge strands visible
 
       pts.push({
         u, v,
