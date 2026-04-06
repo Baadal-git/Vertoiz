@@ -47,3 +47,11 @@
 .animate-logo-shine {
   animation: logo-shine 4s ease-in-out infinite;
 }
+
+
+/* Forces all layers and children within the logo to be circular */
+.animate-logo-morph, 
+.animate-logo-morph * {
+  border-radius: 50% !important;
+  overflow: hidden; /* Clips any square corners of the content inside */
+}
