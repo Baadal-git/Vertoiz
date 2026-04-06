@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import AnimatedBackground from "./AnimatedBackground";
 import { heroData } from "../data/mock";
+import { createClient } from "@supabase/supabase-js";
+
 
 const HeroSection = ({ formRef }) => {
   const [email, setEmail] = useState("");
@@ -10,14 +12,23 @@ const HeroSection = ({ formRef }) => {
 
   const validateEmail = (em) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
-    if (!email.trim()) { setError("Please enter your email."); return; }
-    if (!validateEmail(email)) { setError("Please enter a valid email address."); return; }
-    setSubmitted(true);
-    setEmail("");
-  };
+ const supabase = createClient(
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_ANON_KEY
+);
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+  if (!email.trim()) { setError("Please enter your email."); return; }
+  if (!validateEmail(email)) { setError("Please enter a valid email address."); return; }
+  
+  const { error: sbError } = await supabase.from("waitlist").insert({ email });
+  if (sbError) { setError("Something went wrong. Try again."); return; }
+  
+  setSubmitted(true);
+  setEmail("");
+};
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0a0a0a]">
