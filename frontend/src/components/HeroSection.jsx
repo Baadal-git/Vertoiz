@@ -70,7 +70,20 @@ const HeroSection = ({ formRef }) => {
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setError(""); }}
                   placeholder={heroData.inputPlaceholder}
-                  className="w-full px-5 py-3.5 bg-white/[0.06] border border-white/10 rounded-full text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-white/25 focus:bg-white/[0.08] transition-all duration-300"
+                  className="hero-email-input w-full px-5 py-3.5 rounded-full text-sm text-white transition-all duration-300 focus:outline-none"
+                  style={{
+                    background: "rgba(255,255,255,0.07)",
+                    border: "1px solid rgba(255,255,255,0.30)",
+                    color: "#ffffff",
+                  }}
+                  onFocus={e => {
+                    e.currentTarget.style.border = "1px solid rgba(255,255,255,0.60)";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,255,255,0.08)";
+                  }}
+                  onBlur={e => {
+                    e.currentTarget.style.border = "1px solid rgba(255,255,255,0.30)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
                 />
                 {error && <p className="absolute -bottom-6 left-5 text-red-400/80 text-xs">{error}</p>}
               </div>
