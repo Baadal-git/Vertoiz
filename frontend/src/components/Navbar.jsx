@@ -20,13 +20,13 @@ const Navbar = ({ onJoinClick }) => {
   }, [handleScroll]);
 
   // Interpolated values — wide & relaxed at top, compact when scrolled
-  const maxWidth = lerp(600, 420, progress);
-  const paddingX = lerp(20, 14, progress);
-  const paddingY = lerp(10, 7, progress);
-  const logoSize = lerp(36, 28, progress);
-  const fontSize = lerp(14, 12.5, progress);
-  const btnPaddingX = lerp(20, 16, progress);
-  const btnPaddingY = lerp(8, 6, progress);
+  const maxWidth = 600;
+  const paddingX = 20;
+  const paddingY = 10;
+  const logoSize = 36;
+  const fontSize = 14;
+  const btnPaddingX = 20;
+  const btnPaddingY = 8;
   const blurAmount = lerp(12, 20, progress);
   const bgOpacity = lerp(0.75, 0.95, progress);
   const borderOpacity = lerp(0.06, 0.12, progress);
