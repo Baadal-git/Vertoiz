@@ -48,44 +48,44 @@ export const featureGridData = [
   {
     id: 1,
     icon: "GitBranch",
-    title: "Matchmaking Logic",
+    title: "Request & Data Flow",
     description:
-      "Enforce proper matchmaking patterns with validated queue management, rating algorithms, and fair pairing logic.",
+      "Exactly how data moves through your system: entry points, transformation layers, storage writes, and response paths. No ambiguity.",
   },
   {
     id: 2,
     icon: "Radio",
-    title: "WebSocket Data Flow",
+    title: "WebSocket Topology",
     description:
-      "Validate real-time data channels, message routing, and connection lifecycle management for robust WebSocket implementations.",
+      "Full real-time architecture: connection lifecycle, message routing, room/channel structure, and reconnection strategy.",
   },
   {
     id: 3,
     icon: "ShieldCheck",
-    title: "State & Score Validation",
+    title: "State Strategy",
     description:
-      "Catch inconsistent state mutations and score calculations before they corrupt your application data.",
+      "Where state lives, who owns it, how it syncs, and what happens when it drifts or conflicts.",
   },
   {
     id: 4,
     icon: "Zap",
-    title: "Real-Time Patterns",
+    title: "Validation & Logic Placement",
     description:
-      "Enforce event-driven architecture patterns that handle concurrent operations without race conditions.",
+      "Precise layer-by-layer map of where input validation, business rules, and auth checks must live — and why.",
   },
   {
     id: 5,
     icon: "TrendingUp",
-    title: "Scalability Enforcement",
+    title: "Recovery & Resilience",
     description:
-      "Validate that your backend patterns can handle growth — from 100 to 100,000 concurrent users.",
+      "Disconnect handling, retry logic, queue durability, and failure paths built into the architecture from day one.",
   },
   {
     id: 6,
     icon: "Lock",
-    title: "Backend Security",
+    title: "Scaling & Sharding Plan",
     description:
-      "Detect insecure API patterns, exposed endpoints, and authentication gaps in AI-generated backend code.",
+      "How your system grows from 100 to 100,000 users — horizontal scaling points, bottlenecks identified, sharding strategy included.",
   },
 ];
 
