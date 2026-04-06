@@ -15,31 +15,32 @@ export const heroData = {
 export const featureRowData = [
   {
     id: 1,
-    label: "Logic Enforced",
+    label: "Describe your idea",
     description:
-      "Every backend decision is validated against real architecture patterns, not just syntax.",
+      "Plain English. Our analyzer extracts real-time needs, concurrency, edge cases, compliance, and growth curve.",
   },
   {
     id: 2,
-    label: "Built for Scale",
+    label: "Get deep system architecture",
     description:
-      "Vertoiz enforces data flow, state management, and WebSocket patterns that hold as your app grows.",
+      "Full network & data flows, state strategy, validation placement, scaling plan, and a Cursor-ready system prompt — everything the AI skipped.",
   },
   {
     id: 3,
-    label: "Security First",
+    label: "One-click starter kit",
     description:
-      "Catches insecure patterns in AI-generated code before they reach production.",
+      "Pre-built infra (WebSocket server, Redis adapter, queues, event sourcing) so you can start building immediately.",
   },
 ];
 
 export const whySectionData = {
   subheading:
-    "Vibe coders ship fast. Vertoiz makes sure the backend doesn't collapse.",
+    "The vibe-coding hangover is real",
   paragraphs: [
-    "AI-generated code often dumps all logic into a single layer — no separation of concerns, no real architecture. It works in the demo. It breaks in production.",
-    "Vertoiz acts as your architecture guardrail. It watches how your backend is structured in real-time, flags anti-patterns, and enforces scalable design — so your app doesn't fall apart at 1,000 users.",
-    "Think of it as a senior backend engineer reviewing every AI-generated line before it ships.",
+    "You describe the idea in plain English to Cursor, Claude, v0, or Windsurf. The AI ships code at lightspeed.",
+    "But real architecture is missing.",
+    "Same tired default stack regardless of use case. No thought given to how requests actually flow, WebSocket topology, matchmaking queues, where validation and business logic must live, recovery on disconnect, or how the system scales beyond a prototype.",
+    "Projects collapse the moment they grow. Security holes appear. Technical debt compounds."
   ],
 };
 
