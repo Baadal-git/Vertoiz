@@ -64,7 +64,12 @@
   },
   
   "overrides": {
-  "ajv": "^8.0.0"
+  "ajv": "^8.0.0",
+  "ajv-keywords": "^5.0.0",
+  "fork-ts-checker-webpack-plugin": {
+    "ajv": "^8.0.0",
+    "ajv-keywords": "^5.0.0"
+  }
 },
 
   "browserslist": {
