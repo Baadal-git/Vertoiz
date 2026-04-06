@@ -13,7 +13,9 @@
     border-radius: 50%;
     /* Removes the wobbling rotation to keep layers aligned */
     transform: rotate(0deg);
+    }
   }
+  
 
 @keyframes logo-pulse {
   0%, 100% {
