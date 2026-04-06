@@ -7,7 +7,7 @@ export const heroData = {
   heading: "Deep application architecture.",
   headingAccent: "From idea to production.",
   subheading:
-    "AI writes the code. Vertoiz makes sure it's built to last. We enforce backend architecture as you build.",
+    "Describe your app in plain English.Instantly get a complete, production-grade backend and network architecture — flows, WebSocket topology, state strategy, validation placement, recovery mechanisms, scaling plan, and every critical detail the AI normally ignores.",
   ctaText: "Join the Waitlist",
   inputPlaceholder: "Enter your email",
 };
