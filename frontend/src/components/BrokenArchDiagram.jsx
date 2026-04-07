@@ -40,7 +40,7 @@ export default function BrokenArchDiagram() {
         }
         .bad-fb {
           stroke-dasharray: 2 9;
-          animation: flow-orange .9s linear infinite, orange-pulse 2.8s ease-in-out infinite;
+          animation: flow-orange .9s linear infinite;
         }
         @media (prefers-reduced-motion: reduce) {
           .bad-box { opacity:1 !important; animation:none !important; }
