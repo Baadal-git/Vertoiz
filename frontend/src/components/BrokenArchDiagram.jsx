@@ -7,11 +7,13 @@ export default function BrokenArchDiagram() {
           to   { opacity:1; transform:translateY(0); }
         }
         @keyframes flow {
-          to { stroke-dashoffset:-20; }
-        }
-        @keyframes flow-orange {
-          to { stroke-dashoffset:-16; }
-        }
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -15; }
+}
+@keyframes flow-orange {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -11; }
+}
         @keyframes orange-pulse {
           0%,100% { opacity:.55; }
           50%      { opacity:1; }
