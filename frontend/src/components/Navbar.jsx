@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { navData } from "../data/mock";
-import logo_black from "../Assets/logo.png";
+import logo_black from "../Assets/logo_black.png";
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
