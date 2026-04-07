@@ -59,7 +59,7 @@ const Navbar = ({ onJoinClick }) => {
         {/* Animated Logo */}
         <div className="flex items-center gap-2.5">
           <div
-            className="relative rounded-lg overflow-hidden flex-shrink-0"
+            className="relative rounded-full overflow-hidden flex-shrink-0"
             style={{
               width: `${logoSize}px`,
               height: `${logoSize}px`,
@@ -71,7 +71,7 @@ const Navbar = ({ onJoinClick }) => {
               alt="logo"
               className="absolute inset-0 w-full h-full object-contain"
               />
-            <div className="absolute inset-[3px] bg-[#111111]/30 rounded-md backdrop-blur-sm" />
+            <div className="absolute inset-[3px] bg-[#111111]/30 rounded-full backdrop-blur-sm" />
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent animate-logo-shine" />
           </div>
           <span
