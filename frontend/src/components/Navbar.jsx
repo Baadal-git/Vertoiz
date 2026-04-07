@@ -71,7 +71,6 @@ const Navbar = ({ onJoinClick }) => {
               alt="logo"
               className="absolute inset-0 w-full h-full object-contain"
               />
-            <div className="absolute inset-0 bg-[#111111]/3 rounded-full backdrop-blur-sm" />
             
           </div>
           <span
