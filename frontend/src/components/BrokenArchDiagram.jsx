@@ -67,8 +67,8 @@ export default function BrokenArchDiagram() {
         <line className="bad-fl" x1="340" y1="274" x2="340" y2="319" stroke="#2e2e2e" strokeWidth="0.5" markerEnd="url(#bad-arr)" style={{ animationDelay: '-1.1s' }}/>
 
         {/* Broken paths */}
-        <path className="bad-fb" d="M410,72 L458,72 L458,252 L410,252" fill="none" stroke="#e8642a" strokeWidth="0.5" markerEnd="url(#bad-arr)"/>
-        <path className="bad-fb" d="M560,230 L560,14 L340,14 L340,50" fill="none" stroke="#e8642a" strokeWidth="0.5" markerEnd="url(#bad-arr)" style={{ animationDelay: '-.35s' }}/>
+        <path className="bad-fb" d="M410,72 L458,72 L458,252 L410,252" fill="none" stroke="#e8642a" strokeWidth="1.5" markerEnd="url(#bad-arr)"/>
+        <path className="bad-fb" d="M560,230 L560,14 L340,14 L340,50" fill="none" stroke="#e8642a" strokeWidth="1.5" markerEnd="url(#bad-arr)" style={{ animationDelay: '-.35s' }}/>
 
         {/* Frontend */}
         <g id="bad-b1" className="bad-box">
