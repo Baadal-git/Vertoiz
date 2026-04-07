@@ -104,6 +104,7 @@ const handleSubmit = async (e) => {
             </form>
           )}
         </motion.div>
+        <section className="min-h-screen flex flex-col items-center justify-center ...">
       </div>
 
     </section>
