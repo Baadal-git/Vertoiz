@@ -71,8 +71,8 @@ const Navbar = ({ onJoinClick }) => {
               alt="logo"
               className="absolute inset-0 w-full h-full object-contain"
               />
-            <div className="absolute inset-0 bg-[#111111]/2 rounded-full backdrop-blur-sm" />
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent animate-logo-shine" />
+            <div className="absolute inset-0 bg-[#111111]/3 rounded-full backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-logo-shine" />
           </div>
           <span
             className="text-white/90 font-medium tracking-wide"
