@@ -15,14 +15,12 @@ const Home = () => {
   const heroFormRef = useRef(null);
 
   const scrollToForm = () => {
-    if (heroFormRef.current) {
-      heroFormRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-      setTimeout(() => {
-        const input = heroFormRef.current.querySelector("input");
-        if (input) input.focus();
-      }, 600);
-    }
-  };
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  setTimeout(() => {
+    const input = heroFormRef.current?.querySelector("input");
+    if (input) input.focus();
+  }, 600);
+};
 
   return (
     <div className="min-h-screen">
