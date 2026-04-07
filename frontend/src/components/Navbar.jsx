@@ -65,7 +65,11 @@ const Navbar = ({ onJoinClick }) => {
               transition: "width 0.35s cubic-bezier(0.22, 1, 0.36, 1), height 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-[#c8a0e8] via-[#e8b4d0] to-[#d4a8e0] animate-logo-morph rounded-lg" />
+            <img
+  src="/logo.png" // or your actual path
+  alt="logo"
+  className="absolute inset-0 w-full h-full object-contain"
+/>
             <div className="absolute inset-[3px] bg-[#111111]/30 rounded-md backdrop-blur-sm" />
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent animate-logo-shine" />
           </div>
