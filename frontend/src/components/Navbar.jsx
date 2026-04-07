@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { navData } from "../data/mock";
+import logo_black from "../Assets/logo.png";
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
@@ -66,10 +67,10 @@ const Navbar = ({ onJoinClick }) => {
             }}
           >
             <img
-  src="/logo.png" // or your actual path
-  alt="logo"
-  className="absolute inset-0 w-full h-full object-contain"
-/>
+              src={logo_black} // or your actual path
+              alt="logo"
+              className="absolute inset-0 w-full h-full object-contain"
+              />
             <div className="absolute inset-[3px] bg-[#111111]/30 rounded-md backdrop-blur-sm" />
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent animate-logo-shine" />
           </div>
