@@ -8,8 +8,6 @@ const Footer = () => (
       <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
         {/* Logo */}
         <div className="flex items-center gap-2.5">
-          <div className="relative w-7 h-7 rounded-md overflow-hidden flex-shrink-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#c8a0e8] via-[#e8b4d0] to-[#d4a8e0] animate-logo-morph rounded-md" />
             <div className="absolute inset-[2px] bg-[#0a0a0a]/40 rounded-sm backdrop-blur-sm" />
           </div>
           <img src={logo_white} alt="Vertoiz" className="h-7 w-auto" />
