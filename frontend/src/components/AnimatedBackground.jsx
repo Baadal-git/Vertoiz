@@ -1,35 +1,5 @@
 import React, { useRef, useEffect } from "react";
 
-const N_STRANDS       = 19;
-const DOTS_PER_STRAND = 240;
-const TILT            = 0.50;
-
-function smoothstep(edge0, edge1, x) {
-  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
-  return t * t * (3 - 2 * t);
-}
-
-function buildRibbon() {
-  const pts = [];
-  for (let si = 0; si < N_STRANDS; si++) {
-    const v = (si / (N_STRANDS - 1)) * 2 - 1;
-    const vFade = Math.exp(-v * v * 0.90);
-    for (let di = 0; di < DOTS_PER_STRAND; di++) {
-      const u = di / (DOTS_PER_STRAND - 1);
-      const uFade = smoothstep(0, 0.12, u) * smoothstep(1, 0.88, u);
-      const weight = vFade * uFade;
-      if (weight < 0.005) continue;
-      pts.push({
-        u, v, weight,
-        sz: 0.75 + Math.random() * 1.10,
-        br: 0.72 + Math.random() * 0.28,
-        pj: Math.random() * Math.PI * 2,
-      });
-    }
-  }
-  return pts;
-}
-
 const AnimatedBackground = () => {
   const canvasRef = useRef(null);
 
@@ -39,9 +9,8 @@ const AnimatedBackground = () => {
     const ctx = canvas.getContext("2d");
     let animId;
     let W = 0, H = 0;
-    let ribbon = buildRibbon();
 
-    console.log("🎨 AnimatedBackground mounted & drawing"); // ← you should see this
+    console.log("%c🎨 AnimatedBackground mounted & drawing", "color:#67e8f9; font-size:14px;");
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -56,71 +25,27 @@ const AnimatedBackground = () => {
 
     resize();
     window.addEventListener("resize", resize);
-    ctx.imageSmoothingEnabled = false;
 
-    const draw = (ms) => {
+    const draw = () => {
       if (!W || !H) {
         animId = requestAnimationFrame(draw);
         return;
       }
 
-      const t = (ms || 0) * 0.00030;
-
-      // Temporary test fill — change back to "#0a0a0a" once you see the ribbon
-      ctx.fillStyle = "#0a0a0a";
+      // TEST BACKGROUND (dark blue tint so we KNOW it's working)
+      ctx.fillStyle = "rgba(10, 20, 40, 0.95)";
       ctx.fillRect(0, 0, W, H);
 
-      const cx = W / 2;
-      const cy = H / 2;
-
-      const spanX      = W * 1.15;
-      const halfWidth  = Math.min(W, H) * 0.26;
-      const waveAmpY   = H * 0.065;
-      const waveAmpZ   = W * 0.055;
-      const depthScale = W * 0.14;
-
-      const proj = [];
-
-      for (let i = 0; i < ribbon.length; i++) {
-        const p = ribbon[i];
-        const sx = (p.u - 0.5) * spanX;
-
-        const sy_static = Math.sin(p.u * Math.PI * 1.80) * H * 0.10 + Math.sin(p.u * Math.PI * 0.55) * H * 0.06;
-        const sz_static = Math.cos(p.u * Math.PI * 1.20) * depthScale * 0.60 + Math.cos(p.u * Math.PI * 2.50) * depthScale * 0.25;
-
-        const wave1 = Math.sin(p.u * 5.5 + t * 1.30 + p.pj * 0.3) * waveAmpY;
-        const wave2 = Math.sin(p.u * 3.2 - t * 0.90) * waveAmpY * 0.55;
-        const wave3 = Math.sin(p.u * 8.0 + t * 0.65 + p.pj * 0.2) * waveAmpY * 0.22;
-
-        const waveZ1 = Math.cos(p.u * 4.1 + t * 1.10) * waveAmpZ * 0.55;
-        const waveZ2 = Math.cos(p.u * 2.3 - t * 0.70) * waveAmpZ * 0.30;
-
-        const spineY = sy_static + wave1 + wave2 + wave3;
-        const spineZ = sz_static + waveZ1 + waveZ2;
-
-        const crossY = p.v * halfWidth * Math.cos(TILT);
-        const crossZ = p.v * halfWidth * Math.sin(TILT);
-
-        const wx = sx;
-        const wy = spineY + crossY;
-        const wz = spineZ + crossZ;
-
-        const fov = 900;
-        const scale = fov / (fov + wz);
-        const px = cx + wx * scale;
-        const py = cy + wy * scale;
-        const size = p.sz * scale * 1.8;
-        const alpha = p.br * p.weight * (0.6 + scale * 0.4);
-
-        proj.push({ px, py, size, alpha });
-      }
-
-      ctx.shadowBlur = 2;
-      for (let i = 0; i < proj.length; i++) {
-        const d = proj[i];
-        ctx.globalAlpha = d.alpha;
+      // TEST DOTS - large and obvious
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = "#67e8f9";
+      for (let i = 0; i < 50; i++) {
+        const x = Math.random() * W;
+        const y = Math.random() * H;
+        const size = 8 + Math.random() * 12;
+        ctx.globalAlpha = 0.8 + Math.random() * 0.2;
         ctx.fillStyle = "#67e8f9";
-        ctx.fillRect(d.px, d.py, d.size, d.size);
+        ctx.fillRect(x, y, size, size);
       }
       ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
@@ -128,7 +53,7 @@ const AnimatedBackground = () => {
       animId = requestAnimationFrame(draw);
     };
 
-    draw(0);
+    draw();
 
     return () => {
       window.removeEventListener("resize", resize);
