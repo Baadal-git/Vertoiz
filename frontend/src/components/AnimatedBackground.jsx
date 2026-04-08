@@ -1,15 +1,9 @@
 import React, { useRef, useEffect } from "react";
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// VISUAL CONCEPT — "FLOWING RIBBON OF DOTS" (100% same look as original)
-// ═══════════════════════════════════════════════════════════════════════════════
+const N_STRANDS       = 19;
+const DOTS_PER_STRAND = 240;
+const TILT            = 0.50;
 
-const N_STRANDS       = 19;   // dense enough to look premium
-const DOTS_PER_STRAND = 240;  // ~70% fewer calculations → no lag
-
-const TILT = 0.50; // ribbon tilt (radians)
-
-// ─────────────────────────────────────────────────────────────────────────────
 function smoothstep(edge0, edge1, x) {
   const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
   return t * t * (3 - 2 * t);
@@ -17,30 +11,25 @@ function smoothstep(edge0, edge1, x) {
 
 function buildRibbon() {
   const pts = [];
-
   for (let si = 0; si < N_STRANDS; si++) {
-    const v       = (si / (N_STRANDS - 1)) * 2 - 1;
-    const vFade   = Math.exp(-v * v * 0.90);
-
+    const v = (si / (N_STRANDS - 1)) * 2 - 1;
+    const vFade = Math.exp(-v * v * 0.90);
     for (let di = 0; di < DOTS_PER_STRAND; di++) {
       const u = di / (DOTS_PER_STRAND - 1);
       const uFade = smoothstep(0, 0.12, u) * smoothstep(1, 0.88, u);
       const weight = vFade * uFade;
       if (weight < 0.005) continue;
-
       pts.push({
-        u, v,
-        weight,
-        sz:  0.75 + Math.random() * 1.10,
-        br:  0.72 + Math.random() * 0.28,
-        pj:  Math.random() * Math.PI * 2,
+        u, v, weight,
+        sz: 0.75 + Math.random() * 1.10,
+        br: 0.72 + Math.random() * 0.28,
+        pj: Math.random() * Math.PI * 2,
       });
     }
   }
   return pts;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 const AnimatedBackground = () => {
   const canvasRef = useRef(null);
 
@@ -49,28 +38,35 @@ const AnimatedBackground = () => {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     let animId;
-    let W, H;
+    let W = 0, H = 0;
     let ribbon = buildRibbon();
+
+    console.log("🎨 AnimatedBackground mounted & drawing"); // ← you should see this
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       W = window.innerWidth;
       H = window.innerHeight;
-      canvas.width  = W * dpr;
+      canvas.width = W * dpr;
       canvas.height = H * dpr;
-      canvas.style.width  = `${W}px`;
+      canvas.style.width = `${W}px`;
       canvas.style.height = `${H}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
+
     resize();
     window.addEventListener("resize", resize);
-
     ctx.imageSmoothingEnabled = false;
 
-    // ── Main render loop (now simplified — always draws every frame) ───────
     const draw = (ms) => {
+      if (!W || !H) {
+        animId = requestAnimationFrame(draw);
+        return;
+      }
+
       const t = (ms || 0) * 0.00030;
 
+      // Temporary test fill — change back to "#0a0a0a" once you see the ribbon
       ctx.fillStyle = "#0a0a0a";
       ctx.fillRect(0, 0, W, H);
 
@@ -79,31 +75,25 @@ const AnimatedBackground = () => {
 
       const spanX      = W * 1.15;
       const halfWidth  = Math.min(W, H) * 0.26;
-      const waveAmpY   = H  * 0.065;
-      const waveAmpZ   = W  * 0.055;
-      const depthScale = W  * 0.14;
+      const waveAmpY   = H * 0.065;
+      const waveAmpZ   = W * 0.055;
+      const depthScale = W * 0.14;
 
       const proj = [];
 
       for (let i = 0; i < ribbon.length; i++) {
         const p = ribbon[i];
-
         const sx = (p.u - 0.5) * spanX;
 
-        const sy_static =
-          Math.sin(p.u * Math.PI * 1.80) * H * 0.10 +
-          Math.sin(p.u * Math.PI * 0.55) * H * 0.06;
+        const sy_static = Math.sin(p.u * Math.PI * 1.80) * H * 0.10 + Math.sin(p.u * Math.PI * 0.55) * H * 0.06;
+        const sz_static = Math.cos(p.u * Math.PI * 1.20) * depthScale * 0.60 + Math.cos(p.u * Math.PI * 2.50) * depthScale * 0.25;
 
-        const sz_static =
-          Math.cos(p.u * Math.PI * 1.20) * depthScale * 0.60 +
-          Math.cos(p.u * Math.PI * 2.50) * depthScale * 0.25;
+        const wave1 = Math.sin(p.u * 5.5 + t * 1.30 + p.pj * 0.3) * waveAmpY;
+        const wave2 = Math.sin(p.u * 3.2 - t * 0.90) * waveAmpY * 0.55;
+        const wave3 = Math.sin(p.u * 8.0 + t * 0.65 + p.pj * 0.2) * waveAmpY * 0.22;
 
-        const wave1 = Math.sin(p.u * 5.5  + t * 1.30 + p.pj * 0.3) * waveAmpY;
-        const wave2 = Math.sin(p.u * 3.2  - t * 0.90)               * waveAmpY * 0.55;
-        const wave3 = Math.sin(p.u * 8.0  + t * 0.65 + p.pj * 0.2) * waveAmpY * 0.22;
-
-        const waveZ1 = Math.cos(p.u * 4.1  + t * 1.10) * waveAmpZ * 0.55;
-        const waveZ2 = Math.cos(p.u * 2.3  - t * 0.70) * waveAmpZ * 0.30;
+        const waveZ1 = Math.cos(p.u * 4.1 + t * 1.10) * waveAmpZ * 0.55;
+        const waveZ2 = Math.cos(p.u * 2.3 - t * 0.70) * waveAmpZ * 0.30;
 
         const spineY = sy_static + wave1 + wave2 + wave3;
         const spineZ = sz_static + waveZ1 + waveZ2;
@@ -125,7 +115,6 @@ const AnimatedBackground = () => {
         proj.push({ px, py, size, alpha });
       }
 
-      // Draw dots with glow
       ctx.shadowBlur = 2;
       for (let i = 0; i < proj.length; i++) {
         const d = proj[i];
@@ -139,7 +128,7 @@ const AnimatedBackground = () => {
       animId = requestAnimationFrame(draw);
     };
 
-    draw(0); // start the animation
+    draw(0);
 
     return () => {
       window.removeEventListener("resize", resize);
