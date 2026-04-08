@@ -8,8 +8,6 @@ const Footer = () => (
       <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
         {/* Logo */}
         <div className="flex items-center gap-2.5">
-            <div className="absolute inset-[2px] bg-[#0a0a0a]/40 rounded-sm backdrop-blur-sm" />
-          </div>
           <img src={logo_white} alt="Vertoiz" className="h-7 w-auto" />
         </div>
 
