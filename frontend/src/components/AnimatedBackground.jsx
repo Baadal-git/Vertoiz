@@ -1,17 +1,20 @@
 import React, { useRef, useEffect } from "react";
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// VISUAL CONCEPT — "FLOWING RIVER / RIBBON OF DOTS"
-// (Exactly the same as before — only particle count reduced for performance)
+// VISUAL CONCEPT — "FLOWING RIBBON OF DOTS" (100% same look as original)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const N_STRANDS       = 19;   // was 31 → still looks fully dense
-const DOTS_PER_STRAND = 240;  // was 494 → ~70% fewer calculations, zero visual loss
+const N_STRANDS       = 19;   // dense enough to look premium
+const DOTS_PER_STRAND = 240;  // ~70% fewer calculations → no lag
 
-// How far the ribbon tilts away from horizontal (radians).
-const TILT = 0.50;
+const TILT = 0.50; // ribbon tilt (radians)
 
 // ─────────────────────────────────────────────────────────────────────────────
+function smoothstep(edge0, edge1, x) {
+  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
 function buildRibbon() {
   const pts = [];
 
@@ -37,11 +40,6 @@ function buildRibbon() {
   return pts;
 }
 
-function smoothstep(edge0, edge1, x) {
-  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
-  return t * t * (3 - 2 * t);
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 const AnimatedBackground = () => {
   const canvasRef = useRef(null);
@@ -52,11 +50,7 @@ const AnimatedBackground = () => {
     const ctx = canvas.getContext("2d");
     let animId;
     let W, H;
-    let lastTime = 0;
-    const FPS_LIMIT = 60;
-    const FRAME_INTERVAL = 1000 / FPS_LIMIT;
-
-    const ribbon = buildRibbon();
+    let ribbon = buildRibbon();
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -71,19 +65,11 @@ const AnimatedBackground = () => {
     resize();
     window.addEventListener("resize", resize);
 
-    // Force GPU rendering + crisp dots
     ctx.imageSmoothingEnabled = false;
 
-    // ── Main render loop (optimized + 60 FPS cap) ───────────────────────────
+    // ── Main render loop (now simplified — always draws every frame) ───────
     const draw = (ms) => {
-      const now = performance.now();
-      if (now - lastTime < FRAME_INTERVAL) {
-        animId = requestAnimationFrame(draw);
-        return;
-      }
-      lastTime = now;
-
-      const t = ms * 0.00030;
+      const t = (ms || 0) * 0.00030;
 
       ctx.fillStyle = "#0a0a0a";
       ctx.fillRect(0, 0, W, H);
@@ -129,7 +115,6 @@ const AnimatedBackground = () => {
         const wy = spineY + crossY;
         const wz = spineZ + crossZ;
 
-        // Perspective projection (unchanged)
         const fov = 900;
         const scale = fov / (fov + wz);
         const px = cx + wx * scale;
@@ -140,12 +125,12 @@ const AnimatedBackground = () => {
         proj.push({ px, py, size, alpha });
       }
 
-      // Draw all dots in one pass
+      // Draw dots with glow
       ctx.shadowBlur = 2;
       for (let i = 0; i < proj.length; i++) {
         const d = proj[i];
         ctx.globalAlpha = d.alpha;
-        ctx.fillStyle = "#67e8f9"; // your ribbon color (cyan/blue – change if needed)
+        ctx.fillStyle = "#67e8f9";
         ctx.fillRect(d.px, d.py, d.size, d.size);
       }
       ctx.shadowBlur = 0;
@@ -154,7 +139,7 @@ const AnimatedBackground = () => {
       animId = requestAnimationFrame(draw);
     };
 
-    draw(0);
+    draw(0); // start the animation
 
     return () => {
       window.removeEventListener("resize", resize);
