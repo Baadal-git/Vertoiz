@@ -1,5 +1,6 @@
 import React from "react";
 import { footerData } from "../data/mock";
+import logo_white from "../Assets/logo_white.png";
 
 const Footer = () => (
   <footer className="bg-[#0a0a0a] py-12 px-6">
@@ -11,9 +12,7 @@ const Footer = () => (
             <div className="absolute inset-0 bg-gradient-to-br from-[#c8a0e8] via-[#e8b4d0] to-[#d4a8e0] animate-logo-morph rounded-md" />
             <div className="absolute inset-[2px] bg-[#0a0a0a]/40 rounded-sm backdrop-blur-sm" />
           </div>
-          <span className="text-white/60 font-medium text-sm tracking-wide">
-            {footerData.logo}
-          </span>
+          <img src={logo_white} alt="Vertoiz" className="h-7 w-auto" />
         </div>
 
         {/* Links */}
