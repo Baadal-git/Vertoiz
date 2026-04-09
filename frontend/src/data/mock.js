@@ -7,7 +7,7 @@ export const heroData = {
   heading: "Deep application architecture.",
   headingAccent: "From idea to production.",
   subheading:
-    "Describe your app in plain English. Get the complete backend architecture your AI-generated code is missing — flows, state, scaling, and everything that makes it production-grade.",
+    "Describe your app in plain English. Get the complete backend architecture your AI-generated code is missing - flows, state, scaling, and everything that makes it production-grade.",
   ctaText: "Join the Waitlist",
   inputPlaceholder: "Enter your email",
 };
