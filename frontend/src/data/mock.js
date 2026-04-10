@@ -23,7 +23,7 @@ export const featureRowData = [
     id: 2,
     label: "Get deep system architecture",
     description:
-      "Full network & data flows, state strategy, validation placement, scaling plan, and a Cursor-ready system prompt — everything the AI skipped.",
+      "Full network & data flows, state strategy, validation placement, scaling plan and then enforces every rule of it, live in your IDE.",
   },
   {
     id: 3,
