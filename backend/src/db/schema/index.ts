@@ -40,6 +40,13 @@ export const projects = pgTable("projects", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Long-lived extension tokens generated from a valid Clerk session
+export const userTokens = pgTable("user_tokens", {
+  token: text("token").primaryKey(),
+  userId: text("user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Scans — each time a user runs a full analysis
 export const scans = pgTable("scans", {
   id: text("id").primaryKey(),

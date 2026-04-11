@@ -5,14 +5,17 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { clerk } from "./middleware/auth";
 import { scanRouter } from "./routes/scan";
+import { authRouter } from "./routes/auth";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+console.log("Clerk key loaded:", !!process.env.CLERK_SECRET_KEY);
+
 // Security headers
 app.use(helmet());
 
-// CORS — only allow your dashboard origin
+// CORS
 const allowedOrigins = [
   "https://vertoiz.vercel.app",
   "http://localhost:3000",
@@ -21,7 +24,6 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (VS Code extension, Postman)
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
       callback(new Error(`CORS: origin ${origin} not allowed`));
@@ -30,13 +32,16 @@ app.use(
   })
 );
 
-// Parse JSON — cap body size to prevent abuse
+// Parse JSON
 app.use(express.json({ limit: "2mb" }));
+
+// Clerk auth — before everything else
+app.use(clerk);
 
 // Global rate limit
 app.use(
   rateLimit({
-    windowMs: 60 * 1000, // 1 minute
+    windowMs: 60 * 1000,
     max: 60,
     standardHeaders: true,
     legacyHeaders: false,
@@ -44,7 +49,7 @@ app.use(
   })
 );
 
-// Stricter limit on scan endpoint — Claude calls are expensive
+// Stricter limit on scan endpoint
 app.use(
   "/api/scans",
   rateLimit({
@@ -54,15 +59,13 @@ app.use(
   })
 );
 
-// Clerk auth middleware — attaches auth to all requests
-app.use(clerk);
-
-// Health check — Railway uses this
+// Health check
 app.get("/health", (_, res) => {
   res.json({ status: "ok", ts: new Date().toISOString() });
 });
 
 // Routes
+app.use("/api/auth", authRouter);
 app.use("/api/scans", scanRouter);
 
 // 404
