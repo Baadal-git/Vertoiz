@@ -6,6 +6,7 @@ import rateLimit from "express-rate-limit";
 import { clerk } from "./middleware/auth";
 import { scanRouter } from "./routes/scan";
 import { authRouter } from "./routes/auth";
+import { fixRouter } from "./routes/fix";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -49,12 +50,14 @@ app.use(
   })
 );
 
-// Stricter limit on scan endpoint
-app.use(
+// Stricter limit only for starting new scans.
+app.post(
   "/api/scans",
   rateLimit({
     windowMs: 60 * 1000,
     max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
     message: { error: "Scan rate limit exceeded. Max 5 scans per minute." },
   })
 );
@@ -66,6 +69,7 @@ app.get("/health", (_, res) => {
 
 // Routes
 app.use("/api/auth", authRouter);
+app.use("/api/fixes", fixRouter);
 app.use("/api/scans", scanRouter);
 
 // 404

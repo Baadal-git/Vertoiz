@@ -130,18 +130,20 @@ scanRouter.get("/", requireAuth, async (req, res) => {
   }
 });
 
-// PATCH /api/scans/violations/:violationId — approve or reject a fix
+// PATCH /api/scans/violations/:violationId — update a fix status
 scanRouter.patch("/violations/:violationId", requireAuth, async (req, res) => {
   const userId = getUserId(req);
   const { violationId } = req.params;
 
   const schema = z.object({
-    status: z.enum(["approved", "rejected"]),
+    status: z.enum(["approved", "rejected", "fixed"]),
   });
 
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "status must be 'approved' or 'rejected'" });
+    res
+      .status(400)
+      .json({ error: "status must be 'approved', 'rejected', or 'fixed'" });
     return;
   }
 

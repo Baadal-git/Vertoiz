@@ -187,7 +187,7 @@ export async function getScanReport(scanId: string, userId: string) {
 export async function updateViolationStatus(
   violationId: string,
   userId: string,
-  status: "approved" | "rejected"
+  status: "approved" | "rejected" | "fixed"
 ) {
   // Verify ownership through scan -> project
   const violation = await db

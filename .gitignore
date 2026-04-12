@@ -91,3 +91,6 @@ android-sdk/-e
 # Environment files
 *.env
 *.env.*
+.vertoiz/
+vertoiz-extension/out/
+backend/dist/
