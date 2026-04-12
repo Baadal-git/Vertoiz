@@ -21,10 +21,10 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en" className={`dark ${inter.variable}`}>
-        <body className="font-sans">{children}</body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" className={`dark ${inter.variable}`}>
+      <body className="font-sans">
+        <ClerkProvider>{children}</ClerkProvider>
+      </body>
+    </html>
   );
 }

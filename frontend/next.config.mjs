@@ -2,7 +2,6 @@
 const nextConfig = {
   experimental: {
     typedRoutes: false,
-    serverComponentsExternalPackages: ['@clerk/nextjs', '@clerk/backend']
   },
 };
 
