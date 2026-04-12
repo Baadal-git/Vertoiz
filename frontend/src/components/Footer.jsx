@@ -1,6 +1,5 @@
 import React from "react";
 import { footerData } from "../data/mock";
-import logo_white from "../Assets/logo_white.png";
 
 const Footer = () => (
   <footer className="bg-[#0a0a0a] py-12 px-6">
@@ -8,7 +7,7 @@ const Footer = () => (
       <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
         {/* Logo */}
         <div className="flex items-center gap-2.5">
-          <img src={logo_white} alt="Vertoiz" className="h-7 w-auto" />
+          <img src="/logo_white.png" alt="Vertoiz" className="h-7 w-auto" />
         </div>
 
         {/* Links */}

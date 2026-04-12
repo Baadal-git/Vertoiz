@@ -38,7 +38,8 @@ CRITICAL RULES:
 - Do not reformat or restyle code outside the fix
 - If you cannot make a surgical fix without replacing the whole file, set strategy to "file"
 - Never return partial functions — always return complete, syntactically valid code
-- Respond with raw JSON only. No markdown, no explanation outside the JSON.`;
+- Respond with raw JSON only. No markdown, no explanation outside the JSON.
+IMPORTANT: Your entire response must start with { and end with }. No text before or after the JSON object under any circumstances.`;
 
 export interface SurgicalFix {
   strategy: "function" | "file";
@@ -84,10 +85,13 @@ Generate the minimal surgical fix for this violation.`;
     .map((b) => (b as { type: "text"; text: string }).text)
     .join("");
 
-  const cleaned = raw
-    .replace(/^```(?:json)?\n?/m, "")
-    .replace(/\n?```$/m, "")
-    .trim();
+  const jsonStart = raw.indexOf("{");
+  if (jsonStart === -1) {
+    throw new Error("Claude did not return a valid JSON response");
+  }
+
+  const jsonEnd = raw.lastIndexOf("}");
+  const cleaned = raw.slice(jsonStart, jsonEnd + 1).trim();
 
   const fix: SurgicalFix = JSON.parse(cleaned);
 

@@ -36,6 +36,7 @@
 
   html {
     color-scheme: dark;
+    scroll-behavior: smooth;
   }
 
   body {
@@ -50,4 +51,8 @@
     linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
   background-size: 32px 32px;
+}
+
+.hero-email-input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
 }

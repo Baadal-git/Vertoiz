@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { navData } from "../data/mock";
-import logo_white from "../Assets/logo_white.png";
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
@@ -67,7 +66,7 @@ const Navbar = ({ onJoinClick }) => {
             }}
           >
             <img
-              src={logo_white} // or your actual path
+              src="/logo_white.png"
               alt="logo"
               className="absolute inset-0 w-full h-full object-contain"
               />

@@ -1,27 +1,31 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import AnimatedBackground from "./AnimatedBackground";
 import { heroData } from "../data/mock";
 import { createClient } from "@supabase/supabase-js";
 
 
-const HeroSection = ({ formRef }) => {
+const HeroSection = ({ formRef, supabaseUrl, supabaseAnonKey }) => {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
 
   const validateEmail = (em) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
 
- const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_ANON_KEY
-);
+ const supabase = useMemo(() => {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return null;
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey);
+}, [supabaseAnonKey, supabaseUrl]);
 
 const handleSubmit = async (e) => {
   e.preventDefault();
   setError("");
   if (!email.trim()) { setError("Please enter your email."); return; }
   if (!validateEmail(email)) { setError("Please enter a valid email address."); return; }
+  if (!supabase) { setError("Something went wrong. Try again."); return; }
   
   const { error: sbError } = await supabase.from("waitlist").insert({ email });
   if (sbError) { setError("Something went wrong. Try again."); return; }
