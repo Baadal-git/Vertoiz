@@ -4,10 +4,10 @@ export const navData = {
 };
 
 export const heroData = {
-  heading: "Deep application architecture.",
-  headingAccent: "From idea to production.",
-  subheading:
-    "Describe your app in plain English. Get the complete backend architecture your AI-generated code is missing - flows, state, scaling, and everything that makes it production-grade.",
+  heading: "Your AI-built app is live.",
+  headingAccent: "Is it production-ready?",
+  subheading: 
+    "Vertoiz scans your AI generated codebase and finds everything production-unsafe before it finds you. Security vulnerabilities, exposed credentials, missing auth, architecture failures, scaling risks. Full report. Real fixes.",
   ctaText: "Join the Waitlist",
   inputPlaceholder: "Enter your email",
 };
@@ -15,77 +15,81 @@ export const heroData = {
 export const featureRowData = [
   {
     id: 1,
-    label: "Describe your idea",
+    label: "Scan your codebase",
     description:
-      "Plain English. Our analyzer extracts real-time needs, concurrency, edge cases, compliance, and growth curve.",
+      "Point Vertoiz at any AI-generated project. It analyzes your entire codebase end to end and identifies every production-unsafe issue.",
   },
   {
     id: 2,
     label: "Get deep system architecture",
     description:
-      "Full network & data flows, state strategy, validation placement, scaling plan and then enforces every rule of it, live in your IDE.",
+      "Get a full severity report",
+  description: "Every issue sorted by severity — critical, high, medium. Security vulnerabilities, missing auth, architecture failures, scaling risks. All in one dashboard.",
   },
   {
     id: 3,
-    label: "One-click starter kit",
+    label: "Approve fixes and ship",
     description:
-      "Pre-built infra (WebSocket server, Redis adapter, queues, event sourcing) so you can start building immediately.",
+      "Each issue comes with the exact fix — code included, plain English explanation. Approve it. Applied directly to your codebase.",
   },
 ];
 
 export const whySectionData = {
-  subheading:
-    "The vibe-coding hangover is real",
-  paragraphs: [
-    "You describe the idea in plain English to Cursor, Claude, v0, or Windsurf. The AI ships code at lightspeed.",
-    "But real architecture is missing.",
-    "Same tired default stack regardless of use case. No thought given to how requests actually flow, WebSocket topology, matchmaking queues, where validation and business logic must live, recovery on disconnect, or how the system scales beyond a prototype.",
-    "Projects collapse the moment they grow. Security holes appear. Technical debt compounds."
-  ],
+  subheading: "Your vibe coded app works. That's the problem.",
+
+paragraphs: [
+  "You built it fast. Cursor, Claude, v0, Windsurf — whatever you used, it shipped. It demos well. It looks real.",
+  
+  "But underneath it's a security risk waiting to happen.",
+  
+  "API keys sitting in the frontend. No auth on half the routes. Backend bleeding into the frontend. No service layer. No plan for what happens when more than 10 people use it at once.",
+  
+  "You don't know what's broken until something breaks in production. Vertoiz finds it first."
+],
 };
 
 export const featureGridData = [
   {
     id: 1,
     icon: "GitBranch",
-    title: "Request & Data Flow",
+    title: "Security Vulnerabilities",
     description:
-      "Exactly how data moves through your system: entry points, transformation layers, storage writes, and response paths. No ambiguity.",
+      "Exposed credentials, insecure data flow, missing input validation — every security issue found and flagged before it ships.",
   },
   {
     id: 2,
     icon: "Radio",
-    title: "WebSocket Topology",
+    title: "Missing Authentication",
     description:
-      "Full real-time architecture: connection lifecycle, message routing, room/channel structure, and reconnection strategy.",
+      "Unprotected routes, missing role verification, bypassed auth checks. Vertoiz finds every gap in your auth layer.",
   },
   {
     id: 3,
     icon: "ShieldCheck",
-    title: "State Strategy",
+    title: "Architecture Failures",
     description:
-      "Where state lives, who owns it, how it syncs, and what happens when it drifts or conflicts.",
+      "Business logic in the wrong layer, backend bleeding into frontend, no service layer. Every structural failure mapped and fixed.",
   },
   {
     id: 4,
     icon: "Zap",
-    title: "Validation & Logic Placement",
+    title: "Scaling Risks",
     description:
-      "Precise layer-by-layer map of where input validation, business rules, and auth checks must live — and why.",
+      "No caching, direct database calls from components, no background processing. Vertoiz tells you exactly what breaks at 100, 1k, and 100k users.",
   },
   {
     id: 5,
     icon: "TrendingUp",
-    title: "Recovery & Resilience",
+    title: "Exact Fix Code",
     description:
-      "Disconnect handling, retry logic, queue durability, and failure paths built into the architecture from day one.",
+      "Every issue comes with the exact fix. Real code, real file paths, plain English explanation of what's changing and why.",
   },
   {
     id: 6,
     icon: "Lock",
-    title: "Scaling & Sharding Plan",
+    title: "One-Click Apply",
     description:
-      "How your system grows from 100 to 100,000 users — horizontal scaling points, bottlenecks identified, sharding strategy included.",
+      "Approve fixes directly from the dashboard. Applied to your codebase instantly. No copy-pasting. No guessing.",
   },
 ];
 
