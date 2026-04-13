@@ -48,8 +48,8 @@ const handleSubmit = async (e) => {
           {heroData.heading}
           <br />
           <span className="inline-block">
-            Is it production ready?{" "}
-            <em className="italic">production.</em>
+            Is it <em className="italic">production.</em> ready? {" "}
+            
           </span>
         </motion.h1>
 
