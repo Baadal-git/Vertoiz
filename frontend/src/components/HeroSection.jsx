@@ -28,7 +28,11 @@ const handleSubmit = async (e) => {
   if (!supabase) { setError("Something went wrong. Try again."); return; }
   
   const { error: sbError } = await supabase.from("waitlist").insert({ email });
-  if (sbError) { setError("Something went wrong. Try again."); return; }
+  if (sbError) {
+    console.log("Supabase waitlist insert error:", sbError);
+    setError("Something went wrong. Try again.");
+    return;
+  }
   
   setSubmitted(true);
   setEmail("");
