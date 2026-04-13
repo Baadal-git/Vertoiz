@@ -17,16 +17,38 @@ console.log("Clerk key loaded:", !!process.env.CLERK_SECRET_KEY);
 app.use(helmet());
 
 // CORS
-const allowedOrigins = [
-  "https://vertoiz.vercel.app",
-  "http://localhost:3000",
+const allowedOrigins = new Set(
+  [
+    "https://vertoiz.com",
+    "https://www.vertoiz.com",
+    ...(process.env.ALLOWED_ORIGINS ?? "")
+      .split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+  ],
+);
+
+const allowedOriginPatterns = [
+  /^https:\/\/vertoiz\.vercel\.app$/,
+  /^https:\/\/vertoiz-[a-z0-9-]+\.vercel\.app$/,
+  /^https:\/\/[a-z0-9-]+-baadal-gits-projects\.vercel\.app$/,
+  /^http:\/\/localhost:\d+$/,
+  /^http:\/\/127\.0\.0\.1:\d+$/,
 ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      if (allowedOrigins.has(origin)) {
+        return callback(null, true);
+      }
+
+      if (allowedOriginPatterns.some((pattern) => pattern.test(origin))) {
+        return callback(null, true);
+      }
+
       callback(new Error(`CORS: origin ${origin} not allowed`));
     },
     credentials: true,
