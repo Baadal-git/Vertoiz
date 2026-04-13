@@ -24,9 +24,7 @@ const WhySection = () => (
         variants={slideUp()}
         className="text-3xl sm:text-4xl md:text-[52px] font-bold text-[#0a0a0a] text-center mb-20 sm:mb-24 leading-[1.1] tracking-[-0.03em]"
       >
-        We help automate
-        <br />
-        what matters most.
+        The vibe coding hangover is real.
       </motion.h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
