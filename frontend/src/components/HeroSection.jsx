@@ -43,7 +43,7 @@ const handleSubmit = async (e) => {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          className="text-5xl sm:text-6xl md:text-7xl lg:text-[80px] font-bold leading-[1.08] tracking-[-0.03em] text-white mb-6"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-bold leading-[1.08] tracking-[-0.03em] text-white mb-6"
         >
           {heroData.heading}
           <br />
