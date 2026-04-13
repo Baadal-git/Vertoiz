@@ -1,42 +1,69 @@
 import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { createClient } from "@supabase/supabase-js";
 import AnimatedBackground from "./AnimatedBackground";
 import { heroData } from "../data/mock";
-import { createClient } from "@supabase/supabase-js";
 
-
-const HeroSection = ({ formRef, supabaseUrl, supabaseAnonKey }) => {
+const HeroSection = ({ formRef }) => {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateEmail = (em) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
 
- const supabase = useMemo(() => {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return null;
-  }
+  const supabase = useMemo(() => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  return createClient(supabaseUrl, supabaseAnonKey);
-}, [supabaseAnonKey, supabaseUrl]);
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return null;
+    }
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  if (!email.trim()) { setError("Please enter your email."); return; }
-  if (!validateEmail(email)) { setError("Please enter a valid email address."); return; }
-  if (!supabase) { setError("Something went wrong. Try again."); return; }
-  
-  const { error: sbError } = await supabase.from("waitlist").insert({ email });
-  if (sbError) {
-    console.log("Supabase waitlist insert error:", sbError);
-    setError("Something went wrong. Try again.");
-    return;
-  }
-  
-  setSubmitted(true);
-  setEmail("");
-};
+    return createClient(supabaseUrl, supabaseAnonKey);
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!email.trim()) {
+      setError("Please enter your email.");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (!supabase) {
+      setError("Something went wrong. Try again.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { error: sbError } = await supabase.from("waitlist").insert({
+        email: email.trim().toLowerCase(),
+      });
+
+      if (sbError) {
+        console.log("Supabase waitlist insert error:", sbError);
+        setError("Something went wrong. Try again.");
+        return;
+      }
+
+      setSubmitted(true);
+      setEmail("");
+    } catch (submitError) {
+      console.log("Waitlist request failed:", submitError);
+      setError("Something went wrong. Try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0a0a0a]">
@@ -106,8 +133,8 @@ const handleSubmit = async (e) => {
                 />
                 {error && <p className="absolute -bottom-6 left-5 text-red-400/80 text-xs">{error}</p>}
               </div>
-              <button type="submit" className="w-full sm:w-auto px-7 py-3.5 bg-white text-[#0a0a0a] text-sm font-semibold rounded-full hover:bg-white/90 active:scale-[0.97] transition-colors duration-300 whitespace-nowrap flex-shrink-0">
-                {heroData.ctaText}
+              <button type="submit" disabled={isSubmitting} className="w-full sm:w-auto px-7 py-3.5 bg-white text-[#0a0a0a] text-sm font-semibold rounded-full hover:bg-white/90 active:scale-[0.97] transition-colors duration-300 whitespace-nowrap flex-shrink-0 disabled:cursor-not-allowed disabled:opacity-70">
+                {isSubmitting ? "Joining..." : heroData.ctaText}
               </button>
             </form>
           )}

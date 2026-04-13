@@ -12,10 +12,5 @@ export default async function HomePage() {
     // Not authenticated, show waitlist
   }
 
-  return (
-    <WaitlistHome
-      supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}
-      supabaseAnonKey={process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""}
-    />
-  );
+  return <WaitlistHome />;
 }

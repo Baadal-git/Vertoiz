@@ -11,13 +11,7 @@ import ScrollColorTransition from "@/src/components/ScrollColorTransition";
 import WaitlistCTA from "@/src/components/WaitlistCTA";
 import WhySection from "@/src/components/WhySection";
 
-export function WaitlistHome({
-  supabaseUrl = "",
-  supabaseAnonKey = "",
-}: {
-  supabaseUrl?: string;
-  supabaseAnonKey?: string;
-}) {
+export function WaitlistHome() {
   const heroFormRef = useRef<HTMLDivElement | null>(null);
 
   function scrollToForm() {
@@ -33,11 +27,7 @@ export function WaitlistHome({
   return (
     <div className="min-h-screen">
       <Navbar onJoinClick={scrollToForm} />
-      <HeroSection
-        formRef={heroFormRef}
-        supabaseUrl={supabaseUrl}
-        supabaseAnonKey={supabaseAnonKey}
-      />
+      <HeroSection formRef={heroFormRef} />
       <div style={{ position: "relative", zIndex: 1 }}>
         <ScrollColorTransition>
           <FeatureRow />

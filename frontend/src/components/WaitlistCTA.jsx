@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { createClient } from "@supabase/supabase-js";
 import { waitlistCTAData } from "../data/mock";
 
 const EASE_CUBIC_OUT = [0.33, 1, 0.68, 1];
@@ -17,16 +18,49 @@ const WaitlistCTA = () => {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateEmail = (em) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
 
-  const handleSubmit = (e) => {
+  const supabase = useMemo(() => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return null;
+    }
+
+    return createClient(supabaseUrl, supabaseAnonKey);
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (!email.trim()) { setError("Please enter your email."); return; }
     if (!validateEmail(email)) { setError("Please enter a valid email address."); return; }
-    setSubmitted(true);
-    setEmail("");
+    if (!supabase) { setError("Something went wrong. Try again."); return; }
+
+    setIsSubmitting(true);
+
+    try {
+      const { error: sbError } = await supabase.from("waitlist").insert({
+        email: email.trim().toLowerCase(),
+      });
+
+      if (sbError) {
+        console.log("Supabase waitlist insert error:", sbError);
+        setError("Something went wrong. Try again.");
+        return;
+      }
+
+      setSubmitted(true);
+      setEmail("");
+    } catch (submitError) {
+      console.log("Waitlist request failed:", submitError);
+      setError("Something went wrong. Try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -81,9 +115,10 @@ const WaitlistCTA = () => {
             </div>
             <button
               type="submit"
-              className="w-full sm:w-auto px-7 py-3.5 bg-[#0a0a0a] text-white text-sm font-semibold rounded-full hover:bg-[#1a1a1a] active:scale-[0.97] transition-colors duration-300 whitespace-nowrap flex-shrink-0"
+              disabled={isSubmitting}
+              className="w-full sm:w-auto px-7 py-3.5 bg-[#0a0a0a] text-white text-sm font-semibold rounded-full hover:bg-[#1a1a1a] active:scale-[0.97] transition-colors duration-300 whitespace-nowrap flex-shrink-0 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {waitlistCTAData.ctaText}
+              {isSubmitting ? "Joining..." : waitlistCTAData.ctaText}
             </button>
           </motion.form>
         )}
