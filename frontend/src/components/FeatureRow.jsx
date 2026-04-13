@@ -64,9 +64,8 @@ const FeatureRow = () => (
         variants={headingVariants}
         className="text-3xl sm:text-4xl md:text-[52px] font-bold text-[#0a0a0a] text-center mb-16 sm:mb-20 leading-[1.1] tracking-[-0.03em]"
       >
-        Designing products people
+        What Vertoiz finds in your codebase.
         <br />
-        want to use.
       </motion.h2>
 
       <motion.div
