@@ -12,11 +12,11 @@ import WaitlistCTA from "@/src/components/WaitlistCTA";
 import WhySection from "@/src/components/WhySection";
 
 export function WaitlistHome({
-  supabaseUrl,
-  supabaseAnonKey,
+  supabaseUrl = "",
+  supabaseAnonKey = "",
 }: {
-  supabaseUrl: string;
-  supabaseAnonKey: string;
+  supabaseUrl?: string;
+  supabaseAnonKey?: string;
 }) {
   const heroFormRef = useRef<HTMLDivElement | null>(null);
 
