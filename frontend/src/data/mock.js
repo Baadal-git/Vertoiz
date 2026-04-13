@@ -4,7 +4,7 @@ export const navData = {
 };
 
 export const heroData = {
-  heading: "Your AI-built app is live.",
+  heading: "Your AI built app is live.",
   headingAccent: "Is it production-ready?",
   subheading: 
     "Vertoiz scans your AI generated codebase and finds everything production-unsafe before it finds you. Security vulnerabilities, exposed credentials, missing auth, architecture failures, scaling risks. Full report. Real fixes.",
