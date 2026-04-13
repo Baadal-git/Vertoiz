@@ -48,7 +48,7 @@ const handleSubmit = async (e) => {
           {heroData.heading}
           <br />
           <span className="inline-block">
-            From idea to{" "}
+            Is it production ready?{" "}
             <em className="italic">production.</em>
           </span>
         </motion.h1>
