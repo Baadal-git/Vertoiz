@@ -74,6 +74,7 @@ const FeatureGrid = () => (
       >
         Everything wrong with your
         <br />
+        <br />
         AI built app. Fixed.
       </motion.h2>
 
