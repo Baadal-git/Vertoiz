@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${inter.variable}`}>
       <body className="font-sans">
-        <ClerkProvider>{children}</ClerkProvider>
+        <ClerkProvider dynamic>{children}</ClerkProvider>
       </body>
     </html>
   );

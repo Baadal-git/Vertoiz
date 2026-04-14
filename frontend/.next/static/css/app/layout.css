@@ -686,6 +686,10 @@ video {
   margin-left: -0.25rem;
   margin-right: -0.25rem;
 }
+.mx-1 {
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+}
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
@@ -2327,6 +2331,10 @@ video {
   border-color: rgb(187 187 187 / var(--tw-border-opacity, 1));
 }
 
+.focus\:border-\[rgba\(37\2c 99\2c 235\2c 0\.6\)\]:focus {
+  border-color: rgba(37,99,235,0.6);
+}
+
 .focus\:bg-\[\#f0f0f0\]:focus {
   --tw-bg-opacity: 1;
   background-color: rgb(240 240 240 / var(--tw-bg-opacity, 1));
@@ -2367,6 +2375,10 @@ video {
   --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
   --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
   box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+.focus\:ring-\[rgba\(37\2c 99\2c 235\2c 0\.18\)\]:focus {
+  --tw-ring-color: rgba(37,99,235,0.18);
 }
 
 .focus\:ring-ring:focus {

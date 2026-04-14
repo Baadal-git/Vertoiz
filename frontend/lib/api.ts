@@ -7,6 +7,16 @@ interface RequestOptions extends Omit<RequestInit, "headers"> {
   headers?: HeadersInit;
 }
 
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 function getApiBaseUrl() {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -47,7 +57,7 @@ async function request<T>(
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-    throw new Error(payload?.error ?? `Request failed with status ${response.status}.`);
+    throw new ApiError(payload?.error ?? `Request failed with status ${response.status}.`, response.status);
   }
 
   return (await response.json()) as T;
@@ -60,8 +70,10 @@ export function useApiClient() {
     getScans: () => request<ScanListItem[]>("/api/scans", getToken),
     getScanReport: (scanId: string) =>
       request<ScanReport>(`/api/scans/${scanId}`, getToken),
+    getApiToken: () =>
+      request<{ token: string; createdAt: string | null }>("/api/auth/token", getToken),
     createApiToken: () =>
-      request<{ token: string }>("/api/auth/token", getToken, {
+      request<{ token: string; createdAt: string }>("/api/auth/token", getToken, {
         method: "POST",
       }),
     updateViolationStatus: (violationId: string, status: Extract<ViolationStatus, "approved" | "rejected">) =>
