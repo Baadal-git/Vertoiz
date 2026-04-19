@@ -65,6 +65,7 @@ export const scans = pgTable("scans", {
   status: scanStatusEnum("status").default("pending").notNull(),
   totalFiles: integer("total_files").default(0),
   errorMessage: text("error_message"),
+  fixPrUrl: text("fix_pr_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
 });

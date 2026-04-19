@@ -1,10 +1,13 @@
 import { Router } from "express";
 import { type Job, type Queue } from "bullmq";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { fixQueue, scanQueue, type ScanJobData } from "../queues";
+import { fixQueue, scanQueue, type FixJobData, type ScanJobData } from "../queues";
 import { getUserId, requireAuth } from "../middleware/auth";
-import { getGitHubTokenForUser } from "../github/repos";
+import { getGitHubRepoForUser, getGitHubTokenForUser } from "../github/repos";
 import { createScan, getOrCreateProject } from "../services/scan";
+import { db } from "../db";
+import { projects, scans } from "../db/schema";
 
 export const jobRouter = Router();
 
@@ -15,6 +18,10 @@ const ScanJobSchema = z.object({
   defaultBranch: z.string().min(1).max(200).optional(),
   userId: z.string().min(1).optional(),
   scanId: z.string().min(1).optional(),
+});
+
+const FixJobSchema = z.object({
+  scanId: z.string().min(1),
 });
 
 type QueueEntry = {
@@ -106,6 +113,65 @@ jobRouter.get("/:jobId/status", requireAuth, async (req, res) => {
   }
 });
 
+jobRouter.post("/fix", requireAuth, async (req, res) => {
+  const parsed = FixJobSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid request",
+      details: parsed.error.flatten(),
+    });
+    return;
+  }
+
+  const userId = getUserId(req);
+  const { scanId } = parsed.data;
+
+  try {
+    const [scan] = await db
+      .select({
+        id: scans.id,
+        userId: scans.userId,
+        projectId: scans.projectId,
+        fixPrUrl: scans.fixPrUrl,
+        projectName: projects.name,
+      })
+      .from(scans)
+      .innerJoin(projects, eq(scans.projectId, projects.id))
+      .where(and(eq(scans.id, scanId), eq(scans.userId, userId)))
+      .limit(1);
+
+    if (!scan) {
+      res.status(404).json({ error: "Scan not found" });
+      return;
+    }
+
+    const repoFullName = parseGitHubRepoFullName(scan.projectName);
+    const githubToken = await getGitHubTokenForUser(userId);
+    const repo = await getGitHubRepoForUser(userId, repoFullName);
+    const jobData: FixJobData = {
+      scanId,
+      userId,
+      repoFullName: repo.fullName,
+      defaultBranch: repo.defaultBranch,
+      githubToken,
+    };
+
+    const job = await fixQueue.add("fix", jobData, {
+      attempts: 1,
+    });
+
+    res.status(202).json({
+      jobId: job.id,
+      scanId,
+      existingPrUrl: scan.fixPrUrl ?? null,
+    });
+  } catch (err) {
+    console.error("Fix job enqueue error:", err);
+    res.status(500).json({ error: "Failed to enqueue fix job" });
+  }
+});
+
 async function findJob(
   jobId: string
 ): Promise<{ queueName: QueueEntry["name"]; job: Job } | null> {
@@ -124,7 +190,7 @@ async function findJob(
 }
 
 function getJobUserId(job: Job): string | undefined {
-  const data = job.data as Partial<ScanJobData>;
+  const data = job.data as Partial<ScanJobData & FixJobData>;
 
   return typeof data.userId === "string" ? data.userId : undefined;
 }

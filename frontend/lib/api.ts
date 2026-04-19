@@ -2,6 +2,7 @@
 
 import { useAuth } from "@clerk/nextjs";
 import type {
+  FixJobResponse,
   GitHubRepoSummary,
   JobStatusResponse,
   ScanJobResponse,
@@ -159,6 +160,11 @@ export function useApiClient() {
           repoFullName: repo.fullName,
           defaultBranch: repo.defaultBranch,
         }),
+      }),
+    createFixJob: (scanId: string) =>
+      backendRequest<FixJobResponse>("/api/jobs/fix", getToken, {
+        method: "POST",
+        body: JSON.stringify({ scanId }),
       }),
     getJobStatus: (jobId: string) =>
       backendRequest<JobStatusResponse>(`/api/jobs/${jobId}/status`, getToken),

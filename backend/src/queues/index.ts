@@ -12,7 +12,13 @@ export type ScanJobData = {
   defaultBranch?: string;
 };
 
-export type FixJobData = Record<string, unknown>;
+export type FixJobData = {
+  scanId: string;
+  userId: string;
+  repoFullName: string;
+  defaultBranch: string;
+  githubToken: string;
+};
 
 function getRedisUrl(): string {
   const redisUrl = process.env.REDIS_URL;

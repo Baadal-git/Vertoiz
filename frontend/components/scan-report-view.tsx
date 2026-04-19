@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +14,46 @@ import { severityOrder, severityTone } from "@/lib/scan";
 import type { ScanReport, Violation } from "@/lib/types";
 
 type ReviewStatus = "approved" | "rejected";
+
+function getFixJobProgressLabel(progress: number, status: string | null) {
+  if (status === "failed") {
+    return "Fix job failed";
+  }
+
+  if (status === "completed" || status === "complete" || progress >= 100) {
+    return "Complete";
+  }
+
+  if (progress >= 95) {
+    return "Opening PR";
+  }
+
+  if (progress >= 85) {
+    return "Pushing branch";
+  }
+
+  if (progress >= 75) {
+    return "Running tests";
+  }
+
+  if (progress >= 55) {
+    return "Writing files";
+  }
+
+  if (progress >= 45) {
+    return "Applying fixes";
+  }
+
+  if (progress >= 15) {
+    return "Preparing repo";
+  }
+
+  if (progress >= 5) {
+    return "Gathering violations";
+  }
+
+  return "Starting";
+}
 
 function SummaryCard({ title, summary }: { title: string; summary?: string }) {
   return (
@@ -116,6 +157,12 @@ export function ScanReportView({ scanId }: { scanId: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [fixJobId, setFixJobId] = useState<string | null>(null);
+  const [fixJobStatus, setFixJobStatus] = useState<string | null>(null);
+  const [fixJobProgress, setFixJobProgress] = useState(0);
+  const [fixJobError, setFixJobError] = useState<string | null>(null);
+  const [fixJobStarting, setFixJobStarting] = useState(false);
+  const [fixPrUrl, setFixPrUrl] = useState<string | null>(null);
 
   async function load() {
     try {
@@ -123,6 +170,7 @@ export function ScanReportView({ scanId }: { scanId: string }) {
       setError(null);
       const nextReport = await api.getScanReport(scanId);
       setReport(nextReport);
+      setFixPrUrl(nextReport.scan.fixPrUrl ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load scan report.");
     } finally {
@@ -133,6 +181,71 @@ export function ScanReportView({ scanId }: { scanId: string }) {
   useEffect(() => {
     void load();
   }, [scanId]);
+
+  useEffect(() => {
+    if (!fixJobId) {
+      return;
+    }
+
+    const activeJobId = fixJobId;
+    let cancelled = false;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+
+    async function pollJob() {
+      try {
+        const status = await api.getJobStatus(activeJobId);
+
+        if (cancelled) {
+          return;
+        }
+
+        const progress =
+          typeof status.progress === "number" ? status.progress : fixJobProgress;
+
+        setFixJobStatus(status.status);
+        setFixJobProgress(progress);
+
+        if (status.status === "completed" || status.status === "complete") {
+          const nextPrUrl =
+            status.result &&
+            typeof status.result === "object" &&
+            "prUrl" in status.result &&
+            typeof status.result.prUrl === "string"
+              ? status.result.prUrl
+              : null;
+
+          if (nextPrUrl) {
+            setFixPrUrl(nextPrUrl);
+          }
+
+          await load();
+          return;
+        }
+
+        if (status.status === "failed") {
+          setFixJobError(status.failReason ?? "Fix job failed.");
+          return;
+        }
+
+        timeout = setTimeout(() => {
+          void pollJob();
+        }, 3000);
+      } catch (err) {
+        if (!cancelled) {
+          setFixJobError(err instanceof Error ? err.message : "Failed to poll fix job.");
+        }
+      }
+    }
+
+    void pollJob();
+
+    return () => {
+      cancelled = true;
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [fixJobId]);
 
   const groupedViolations = useMemo(() => {
     if (!report) return [];
@@ -151,6 +264,26 @@ export function ScanReportView({ scanId }: { scanId: string }) {
           setError(err instanceof Error ? err.message : "Failed to update violation.");
         });
     });
+  }
+
+  async function handleFixAll() {
+    try {
+      setFixJobStarting(true);
+      setFixJobError(null);
+      setFixJobStatus("waiting");
+      setFixJobProgress(0);
+
+      const result = await api.createFixJob(scanId);
+      setFixJobId(result.jobId);
+
+      if (result.existingPrUrl) {
+        setFixPrUrl(result.existingPrUrl);
+      }
+    } catch (err) {
+      setFixJobError(err instanceof Error ? err.message : "Failed to start fix job.");
+    } finally {
+      setFixJobStarting(false);
+    }
   }
 
   if (loading) {
@@ -184,8 +317,57 @@ export function ScanReportView({ scanId }: { scanId: string }) {
               Status: {report.scan.status} • Created {formatDateTime(report.scan.createdAt)}
             </p>
           </div>
+          <Button
+            disabled={fixJobStarting || (Boolean(fixJobId) && fixJobStatus !== "failed" && fixJobProgress < 100)}
+            onClick={() => {
+              void handleFixAll();
+            }}
+          >
+            {fixJobStarting ? "Starting..." : "Fix All"}
+          </Button>
         </div>
       </section>
+
+      {fixPrUrl ? (
+        <Card className="border-[#2563EB]/30 bg-[#2563EB]/10">
+          <CardContent className="flex flex-wrap items-center justify-between gap-4 py-5">
+            <div>
+              <p className="text-sm font-semibold text-white">Your fixes are ready</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Vertoiz created a pull request with the generated architectural fixes.
+              </p>
+            </div>
+            <Button asChild>
+              <Link href={fixPrUrl} target="_blank" rel="noreferrer">
+                View Pull Request
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {fixJobStatus ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Fix job</CardTitle>
+            <CardDescription>
+              {getFixJobProgressLabel(fixJobProgress, fixJobStatus)}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="h-2 overflow-hidden rounded-full bg-[#222222]">
+              <div
+                className="h-full rounded-full bg-[#2563EB] transition-all"
+                style={{ width: `${Math.max(0, Math.min(fixJobProgress, 100))}%` }}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">{fixJobProgress}% complete</p>
+            {fixJobError ? (
+              <p className="text-sm text-[#ef4444]">{fixJobError}</p>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <section className="grid gap-4 xl:grid-cols-3">
         <SummaryCard title="Architecture Summary" summary={report.blueprint?.architectureSummary} />

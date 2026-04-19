@@ -29,6 +29,7 @@ export interface ScanReport {
     id: string;
     status: ScanStatus;
     totalFiles: number;
+    fixPrUrl?: string | null;
     createdAt: string;
     completedAt: string | null;
   };
@@ -61,6 +62,12 @@ export interface GitHubRepoSummary {
 export interface ScanJobResponse {
   jobId: string;
   scanId: string;
+}
+
+export interface FixJobResponse {
+  jobId: string;
+  scanId: string;
+  existingPrUrl?: string | null;
 }
 
 export interface JobStatusResponse {

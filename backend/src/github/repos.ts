@@ -17,6 +17,8 @@ export type GitHubRepoSummary = {
   private: boolean;
 };
 
+export type GitHubRepoDetails = GitHubRepoSummary;
+
 export class GitHubNotConnectedError extends Error {
   constructor() {
     super("GitHub is not connected for this user");
@@ -27,12 +29,7 @@ export class GitHubNotConnectedError extends Error {
 export async function listUserRepos(
   userId: string
 ): Promise<GitHubRepoSummary[]> {
-  const token = await getGitHubTokenForUser(userId);
-  const { Octokit } = await importOctokitRest();
-
-  const octokit = new Octokit({
-    auth: token,
-  });
+  const octokit = await createOctokitForUser(userId);
 
   try {
     const repos = await octokit.paginate(
@@ -84,4 +81,37 @@ export async function getGitHubTokenForUser(userId: string): Promise<string> {
   }
 
   return githubToken.token;
+}
+
+export async function getGitHubRepoForUser(
+  userId: string,
+  repoFullName: string
+): Promise<GitHubRepoDetails> {
+  const [owner, repo] = repoFullName.split("/");
+
+  if (!owner || !repo) {
+    throw new Error("Invalid GitHub repository name");
+  }
+
+  const octokit = await createOctokitForUser(userId);
+  const response = await octokit.rest.repos.get({
+    owner,
+    repo,
+  });
+
+  return {
+    id: response.data.id,
+    fullName: response.data.full_name,
+    defaultBranch: response.data.default_branch,
+    private: response.data.private,
+  };
+}
+
+async function createOctokitForUser(userId: string) {
+  const token = await getGitHubTokenForUser(userId);
+  const { Octokit } = await importOctokitRest();
+
+  return new Octokit({
+    auth: token,
+  });
 }

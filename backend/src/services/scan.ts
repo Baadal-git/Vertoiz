@@ -157,6 +157,7 @@ export async function getScanReport(scanId: string, userId: string) {
       id: scan[0].id,
       status: scan[0].status,
       totalFiles: scan[0].totalFiles,
+      fixPrUrl: scan[0].fixPrUrl,
       createdAt: scan[0].createdAt.toISOString(),
       completedAt: scan[0].completedAt?.toISOString() ?? null,
     },
