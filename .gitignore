@@ -95,3 +95,7 @@ android-sdk/-e
 vertoiz-extension/out/
 backend/dist/
 !**/.env.example
+
+# Next Files
+.next/
+frontend/.next/
