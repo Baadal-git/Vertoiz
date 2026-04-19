@@ -270,14 +270,27 @@ function formatSourceFiles(files: NonNullable<ScanContext["files"]>): string {
 }
 
 function parseAnalysis(raw: string): AnalysisResult {
-  const cleaned = raw
-    .replace(/^```(?:json)?\n?/m, "")
-    .replace(/\n?```$/m, "")
-    .trim();
+  const cleaned = extractJsonObject(raw);
 
   try {
     return JSON.parse(cleaned);
   } catch {
     throw new Error(`Analysis parse failed. Raw: ${raw.slice(0, 500)}`);
   }
+}
+
+function extractJsonObject(raw: string): string {
+  const withoutFences = raw
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
+
+  const start = withoutFences.indexOf("{");
+  const end = withoutFences.lastIndexOf("}");
+
+  if (start === -1 || end === -1 || end < start) {
+    throw new Error(`Analysis parse failed. Raw: ${raw.slice(0, 500)}`);
+  }
+
+  return withoutFences.slice(start, end + 1).trim();
 }
