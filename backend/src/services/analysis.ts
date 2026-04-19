@@ -1,8 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { ScanContext } from "../lib/types";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 const SYSTEM_PROMPT = `You are the world's most sought-after software architect. Over a 30-year career you have personally reviewed and redesigned the backend systems of companies including Google, Amazon, Stripe, Cloudflare, Coinbase, Netflix, and Morgan Stanley. You have seen every pattern, every anti-pattern, and every failure mode that exists in production software. Engineering VPs at Fortune 500 companies pay millions of dollars for your assessments because you are thorough, precise, and you never miss anything.
 
 You think in systems, not files. When you see a component making a direct database call, you immediately think about what that means for security boundaries, for testability, for deployment flexibility, for incident response. You do not look at code the way a developer looks at code. You look at it the way a surgeon reads an X-ray — you see structural problems that the person who built it cannot see because they are too close to it.
@@ -161,6 +159,7 @@ export interface ScalingPlan {
 
 export async function analyzeCodebase(context: ScanContext): Promise<AnalysisResult> {
   const userMessage = buildPrompt(context);
+  const client = getAnthropicClient();
 
   const response = await client.messages.create({
     model: "claude-opus-4-5",
@@ -175,7 +174,9 @@ export async function analyzeCodebase(context: ScanContext): Promise<AnalysisRes
     .map((b) => (b as { type: "text"; text: string }).text)
     .join("");
 
-  return parseAnalysis(raw);
+  console.log("[analyzeCodebase] Claude raw response:", raw);
+
+  return parseAnalysisResponse(raw);
 }
 
 function buildPrompt(ctx: ScanContext): string {
@@ -269,13 +270,19 @@ function formatSourceFiles(files: NonNullable<ScanContext["files"]>): string {
   return chunks.join("\n\n");
 }
 
-function parseAnalysis(raw: string): AnalysisResult {
+function getAnthropicClient(): Anthropic {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+}
+
+export function parseAnalysisResponse(raw: string): AnalysisResult {
   const cleaned = extractJsonObject(raw);
 
   try {
     return JSON.parse(cleaned);
   } catch {
-    throw new Error(`Analysis parse failed. Raw: ${raw.slice(0, 500)}`);
+    throw new Error(
+      `Analysis parse failed: Claude returned malformed JSON. Response preview: ${raw.slice(0, 200)}`
+    );
   }
 }
 
@@ -289,7 +296,9 @@ function extractJsonObject(raw: string): string {
   const end = withoutFences.lastIndexOf("}");
 
   if (start === -1 || end === -1 || end < start) {
-    throw new Error(`Analysis parse failed. Raw: ${raw.slice(0, 500)}`);
+    throw new Error(
+      `Analysis parse failed: Claude returned malformed or partial JSON. Response preview: ${raw.slice(0, 200)}`
+    );
   }
 
   return withoutFences.slice(start, end + 1).trim();
