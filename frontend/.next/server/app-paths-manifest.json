@@ -1,6 +1,5 @@
 {
   "/page": "app/page.js",
   "/(app)/scan/[scanId]/page": "app/(app)/scan/[scanId]/page.js",
-  "/(app)/dashboard/api-keys/page": "app/(app)/dashboard/api-keys/page.js",
   "/(app)/dashboard/page": "app/(app)/dashboard/page.js"
 }

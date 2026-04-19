@@ -16,10 +16,10 @@ import { cn } from "@/lib/utils";
 
 const items = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, enabled: true },
-  { label: "API Keys", href: "/dashboard/api-keys", icon: KeyRound, enabled: true },
   { label: "Projects", href: "/dashboard", icon: FolderKanban, enabled: false },
   { label: "Violations", href: "/dashboard", icon: AlertTriangle, enabled: false },
   { label: "Scaling Plans", href: "/dashboard", icon: TrendingUp, enabled: false },
+  { label: "API Keys", href: "/dashboard/api-keys", icon: KeyRound, enabled: true },
   { label: "Settings", href: "/dashboard/settings", icon: Settings, enabled: true },
 ];
 

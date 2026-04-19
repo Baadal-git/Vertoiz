@@ -94,3 +94,4 @@ android-sdk/-e
 .vertoiz/
 vertoiz-extension/out/
 backend/dist/
+!**/.env.example

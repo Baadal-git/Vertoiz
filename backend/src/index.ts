@@ -7,6 +7,9 @@ import { clerk } from "./middleware/auth";
 import { scanRouter } from "./routes/scan";
 import { authRouter } from "./routes/auth";
 import { fixRouter } from "./routes/fix";
+import { jobRouter } from "./routes/job";
+import { violationRouter } from "./routes/violation";
+import { startWorkers } from "./workers";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -92,6 +95,8 @@ app.get("/health", (_, res) => {
 // Routes
 app.use("/api/auth", authRouter);
 app.use("/api/fixes", fixRouter);
+app.use("/api/jobs", jobRouter);
+app.use("/api/violations", violationRouter);
 app.use("/api/scans", scanRouter);
 
 // 404
@@ -107,6 +112,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 
 app.listen(PORT, () => {
   console.log(`Vertoiz backend running on port ${PORT}`);
+  startWorkers();
 });
 
 export default app;

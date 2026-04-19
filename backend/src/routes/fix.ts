@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireAuth, getUserId } from "../middleware/auth";
 import { db } from "../db";
 import { violations, scans } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { generateSurgicalFix } from "../services/fixGenerator";
 
 export const fixRouter = Router();
@@ -12,6 +12,10 @@ const FixRequestSchema = z.object({
   violationId: z.string(),
   fileContent: z.string().max(500000), // 500kb max
   filePath: z.string(),
+});
+
+const ApprovedFixesQuerySchema = z.object({
+  projectId: z.string().min(1, "projectId is required"),
 });
 
 // POST /api/fixes/generate
@@ -83,37 +87,51 @@ fixRouter.post("/generate", requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/fixes/pending
-// Called by extension polling — returns all approved violations for this user
-fixRouter.get("/pending", requireAuth, async (req, res) => {
+// GET /api/fixes/approved?projectId=...
+// Called by extension polling — returns approved violations for the current project only
+fixRouter.get("/approved", requireAuth, async (req, res) => {
   const userId = getUserId(req);
+  const parsedQuery = ApprovedFixesQuerySchema.safeParse(req.query);
+
+  if (!parsedQuery.success) {
+    res.status(400).json({
+      error: "Invalid request",
+      details: parsedQuery.error.flatten(),
+    });
+    return;
+  }
+
+  const { projectId } = parsedQuery.data;
 
   try {
-    const userScans = await db
+    const projectScans = await db
       .select({ id: scans.id })
       .from(scans)
-      .where(eq(scans.userId, userId));
+      .where(and(eq(scans.userId, userId), eq(scans.projectId, projectId)));
 
-    if (userScans.length === 0) {
+    if (projectScans.length === 0) {
       res.json({ violations: [] });
       return;
     }
 
-    const scanIds = userScans.map((s) => s.id);
+    const scanIds = new Set(projectScans.map((scan) => scan.id));
 
-    // Get all approved violations across all user scans
-    const pendingViolations = await db
+    const approvedViolations = await db
       .select()
       .from(violations)
-      .where(eq(violations.status, "approved"));
+      .where(
+        and(
+          eq(violations.status, "approved"),
+          eq(violations.projectId, projectId)
+        )
+      );
 
-    // Filter to only this user's scans
-    const userViolations = pendingViolations.filter((v) =>
-      scanIds.includes(v.scanId)
+    const projectViolations = approvedViolations.filter((violation) =>
+      scanIds.has(violation.scanId)
     );
 
     res.json({
-      violations: userViolations.map((v) => ({
+      violations: projectViolations.map((v) => ({
         id: v.id,
         scanId: v.scanId,
         title: v.title,
@@ -125,7 +143,7 @@ fixRouter.get("/pending", requireAuth, async (req, res) => {
       })),
     });
   } catch (err) {
-    console.error("Pending fixes error:", err);
-    res.status(500).json({ error: "Failed to get pending fixes" });
+    console.error("Approved fixes error:", err);
+    res.status(500).json({ error: "Failed to get approved fixes" });
   }
 });
