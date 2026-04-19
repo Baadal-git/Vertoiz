@@ -44,7 +44,15 @@ export const projects = pgTable("projects", {
 export const userTokens = pgTable("user_tokens", {
   token: text("token").primaryKey(),
   userId: text("user_id").notNull(),
+  type: text("type").default("api").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const githubOAuthStates = pgTable("github_oauth_states", {
+  state: text("state").primaryKey(),
+  userId: text("user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
 });
 
 // Scans — each time a user runs a full analysis

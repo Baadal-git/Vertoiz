@@ -2,7 +2,7 @@ import { randomBytes } from "crypto";
 import { Router } from "express";
 import type { NextFunction, Request, Response } from "express";
 import { getAuth } from "@clerk/express";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "../db";
 import { userTokens } from "../db/schema";
 
@@ -24,7 +24,7 @@ authRouter.get("/token", async (req: Request, res: Response, next: NextFunction)
         createdAt: userTokens.createdAt,
       })
       .from(userTokens)
-      .where(eq(userTokens.userId, userId))
+      .where(and(eq(userTokens.userId, userId), eq(userTokens.type, "api")))
       .orderBy(desc(userTokens.createdAt))
       .limit(1);
 
@@ -35,6 +35,7 @@ authRouter.get("/token", async (req: Request, res: Response, next: NextFunction)
       await db.insert(userTokens).values({
         token,
         userId,
+        type: "api",
         createdAt,
       });
 
@@ -64,7 +65,9 @@ authRouter.post("/token", async (req: Request, res: Response, next: NextFunction
       return;
     }
 
-    await db.delete(userTokens).where(eq(userTokens.userId, userId));
+    await db
+      .delete(userTokens)
+      .where(and(eq(userTokens.userId, userId), eq(userTokens.type, "api")));
 
     const token = createVertoizToken();
     const createdAt = new Date();
@@ -72,6 +75,7 @@ authRouter.post("/token", async (req: Request, res: Response, next: NextFunction
     await db.insert(userTokens).values({
       token,
       userId,
+      type: "api",
       createdAt,
     });
 

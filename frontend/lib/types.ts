@@ -50,3 +50,10 @@ export interface ScanReport {
     createdAt: string;
   } | null;
 }
+
+export interface GitHubRepoSummary {
+  id: number;
+  fullName: string;
+  defaultBranch: string;
+  private: boolean;
+}

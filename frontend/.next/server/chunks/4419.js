@@ -1,0 +1,1 @@
+"use strict";exports.id=4419,exports.ids=[4419],exports.modules={54419:(e,r,s)=>{s.d(r,{createArchitectureServices:()=>t.i});var t=s(76731);s(13331)}};

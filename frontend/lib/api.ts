@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import type { ScanListItem, ScanReport, ViolationStatus } from "@/lib/types";
+import type { GitHubRepoSummary, ScanListItem, ScanReport, ViolationStatus } from "@/lib/types";
 
 interface RequestOptions extends Omit<RequestInit, "headers"> {
   headers?: HeadersInit;
@@ -22,6 +22,23 @@ function getApiBaseUrl() {
 
   if (!baseUrl) {
     throw new Error("NEXT_PUBLIC_API_URL is not configured.");
+  }
+
+  const url = new URL(baseUrl);
+  url.pathname = url.pathname.replace(/\/+$/, "");
+
+  if (url.pathname.endsWith("/api")) {
+    url.pathname = url.pathname.slice(0, -4);
+  }
+
+  return url.toString().replace(/\/$/, "");
+}
+
+function getBackendBaseUrl() {
+  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+  if (!baseUrl) {
+    throw new Error("NEXT_PUBLIC_BACKEND_URL is not configured.");
   }
 
   const url = new URL(baseUrl);
@@ -63,6 +80,56 @@ async function request<T>(
   return (await response.json()) as T;
 }
 
+async function githubRequest<T>(
+  path: string,
+  getToken: () => Promise<string | null>,
+  options: RequestOptions = {},
+): Promise<T> {
+  const token = await getToken();
+
+  if (!token) {
+    throw new Error("Missing Clerk session token.");
+  }
+
+  const url = `${getBackendBaseUrl()}${path}`;
+  console.log("Vertoiz GitHub API fetch:", {
+    url,
+    hasClerkToken: Boolean(token),
+  });
+
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...options.headers,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as
+      | { error?: string }
+      | null;
+
+    console.log("Vertoiz GitHub API fetch failed:", {
+      url,
+      status: response.status,
+      error: payload?.error ?? null,
+    });
+
+    throw new ApiError(
+      payload?.error ?? `Request failed with status ${response.status}.`,
+      response.status,
+    );
+  }
+
+  const payload = (await response.json()) as T;
+  console.log("Vertoiz GitHub API fetch succeeded:", { url });
+
+  return payload;
+}
+
 export function useApiClient() {
   const { getToken } = useAuth();
 
@@ -76,6 +143,8 @@ export function useApiClient() {
       request<{ token: string; createdAt: string }>("/api/auth/token", getToken, {
         method: "POST",
       }),
+    getGitHubRepos: () =>
+      githubRequest<{ repos: GitHubRepoSummary[] }>("/api/github/repos", getToken),
     updateViolationStatus: (violationId: string, status: Extract<ViolationStatus, "approved" | "rejected">) =>
       request<{ id: string; status: string }>(`/api/scans/violations/${violationId}`, getToken, {
         method: "PATCH",

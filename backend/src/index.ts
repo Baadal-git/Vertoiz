@@ -7,6 +7,7 @@ import { clerk } from "./middleware/auth";
 import { scanRouter } from "./routes/scan";
 import { authRouter } from "./routes/auth";
 import { fixRouter } from "./routes/fix";
+import { githubRouter } from "./routes/github";
 import { jobRouter } from "./routes/job";
 import { violationRouter } from "./routes/violation";
 import { startWorkers } from "./workers";
@@ -95,6 +96,7 @@ app.get("/health", (_, res) => {
 // Routes
 app.use("/api/auth", authRouter);
 app.use("/api/fixes", fixRouter);
+app.use("/api/github", githubRouter);
 app.use("/api/jobs", jobRouter);
 app.use("/api/violations", violationRouter);
 app.use("/api/scans", scanRouter);

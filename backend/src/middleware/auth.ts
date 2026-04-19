@@ -1,6 +1,6 @@
 import { getAuth, clerkMiddleware } from "@clerk/express";
 import type { Request, Response, NextFunction } from "express";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../db";
 import { userTokens } from "../db/schema";
 
@@ -25,7 +25,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       const [storedToken] = await db
         .select({ userId: userTokens.userId })
         .from(userTokens)
-        .where(eq(userTokens.token, token))
+        .where(and(eq(userTokens.token, token), eq(userTokens.type, "api")))
         .limit(1);
 
       if (storedToken) {
