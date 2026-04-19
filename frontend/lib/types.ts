@@ -57,3 +57,16 @@ export interface GitHubRepoSummary {
   defaultBranch: string;
   private: boolean;
 }
+
+export interface ScanJobResponse {
+  jobId: string;
+  scanId: string;
+}
+
+export interface JobStatusResponse {
+  jobId: string;
+  status: string;
+  progress: number | Record<string, unknown>;
+  result: unknown;
+  failReason: string | null;
+}

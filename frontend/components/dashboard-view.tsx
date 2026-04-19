@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ComponentType } from "react";
 import { AlertTriangle, FolderSearch, Github, ShieldAlert, TimerReset } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import { NewScanDialog } from "@/components/new-scan-dialog";
@@ -38,8 +39,33 @@ function StatCard({
   );
 }
 
+function getScanProgressLabel(progress: number, status: string) {
+  if (status === "failed") {
+    return "Failed";
+  }
+
+  if (status === "completed" || status === "complete" || progress >= 100) {
+    return "Complete";
+  }
+
+  if (progress >= 90) {
+    return "Saving results";
+  }
+
+  if (progress >= 25) {
+    return "Analyzing";
+  }
+
+  if (progress >= 10) {
+    return "Reading repository";
+  }
+
+  return "Cloning";
+}
+
 export function DashboardView() {
   const api = useApiClient();
+  const router = useRouter();
   const [scanList, setScanList] = useState<ScanListItem[]>([]);
   const [reports, setReports] = useState<Record<string, ScanReport>>({});
   const [loading, setLoading] = useState(true);
@@ -53,6 +79,12 @@ export function DashboardView() {
   } | null>(null);
   const [githubLoading, setGithubLoading] = useState(true);
   const [githubError, setGithubError] = useState<string | null>(null);
+  const [scanJobId, setScanJobId] = useState<string | null>(null);
+  const [scanJobScanId, setScanJobScanId] = useState<string | null>(null);
+  const [scanJobStatus, setScanJobStatus] = useState<string | null>(null);
+  const [scanJobProgress, setScanJobProgress] = useState(0);
+  const [scanJobError, setScanJobError] = useState<string | null>(null);
+  const [scanJobStarting, setScanJobStarting] = useState(false);
 
   async function load() {
     try {
@@ -124,6 +156,87 @@ export function DashboardView() {
 
     void loadGitHubConnection();
   }, []);
+
+  useEffect(() => {
+    if (!scanJobId) {
+      return;
+    }
+
+    const activeJobId = scanJobId;
+    let cancelled = false;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+
+    async function pollJob() {
+      try {
+        const status = await api.getJobStatus(activeJobId);
+
+        if (cancelled) {
+          return;
+        }
+
+        const progress =
+          typeof status.progress === "number" ? status.progress : scanJobProgress;
+
+        setScanJobStatus(status.status);
+        setScanJobProgress(progress);
+
+        if (status.status === "completed" || status.status === "complete") {
+          setScanJobProgress(100);
+
+          if (scanJobScanId) {
+            router.push(`/scan/${scanJobScanId}`);
+          } else {
+            void load();
+          }
+          return;
+        }
+
+        if (status.status === "failed") {
+          setScanJobError(status.failReason ?? "Cloud scan failed.");
+          return;
+        }
+
+        timeout = setTimeout(() => {
+          void pollJob();
+        }, 3000);
+      } catch (err) {
+        if (!cancelled) {
+          setScanJobError(err instanceof Error ? err.message : "Failed to poll scan job.");
+        }
+      }
+    }
+
+    void pollJob();
+
+    return () => {
+      cancelled = true;
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [scanJobId, scanJobScanId, router]);
+
+  async function startCloudScan() {
+    if (!selectedRepo) {
+      setScanJobError("Select a GitHub repository first.");
+      return;
+    }
+
+    try {
+      setScanJobStarting(true);
+      setScanJobError(null);
+      setScanJobStatus("waiting");
+      setScanJobProgress(0);
+
+      const job = await api.createScanJob(selectedRepo);
+      setScanJobId(job.jobId);
+      setScanJobScanId(job.scanId);
+    } catch (err) {
+      setScanJobError(err instanceof Error ? err.message : "Failed to start cloud scan.");
+    } finally {
+      setScanJobStarting(false);
+    }
+  }
 
   if (loading) {
     return <LoadingState label="Loading scans and reports..." />;
@@ -210,37 +323,69 @@ export function DashboardView() {
             ) : githubError ? (
               <p className="text-sm text-[#ef4444]">{githubError}</p>
             ) : (
-              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-                <select
-                  className="h-11 rounded-xl border border-border bg-[#0a0a0a] px-4 text-sm text-white outline-none transition-colors focus:border-[#2563EB]"
-                  value={selectedRepo?.fullName ?? ""}
-                  onChange={(event) => {
-                    const repo = githubRepos.find(
-                      (item) => item.fullName === event.target.value,
-                    );
+              <div className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center">
+                  <select
+                    className="h-11 rounded-xl border border-border bg-[#0a0a0a] px-4 text-sm text-white outline-none transition-colors focus:border-[#2563EB]"
+                    value={selectedRepo?.fullName ?? ""}
+                    onChange={(event) => {
+                      const repo = githubRepos.find(
+                        (item) => item.fullName === event.target.value,
+                      );
 
-                    setSelectedRepo(
-                      repo
-                        ? {
-                            fullName: repo.fullName,
-                            defaultBranch: repo.defaultBranch,
-                          }
-                        : null,
-                    );
-                  }}
-                >
-                  <option value="">Select a repository</option>
-                  {githubRepos.map((repo) => (
-                    <option key={repo.id} value={repo.fullName}>
-                      {repo.fullName} ({repo.defaultBranch})
-                    </option>
-                  ))}
-                </select>
-                <p className="text-sm text-muted-foreground">
-                  {selectedRepo
-                    ? `${selectedRepo.fullName} · ${selectedRepo.defaultBranch}`
-                    : `${githubRepos.length} repos available`}
-                </p>
+                      setSelectedRepo(
+                        repo
+                          ? {
+                              fullName: repo.fullName,
+                              defaultBranch: repo.defaultBranch,
+                            }
+                          : null,
+                      );
+                    }}
+                  >
+                    <option value="">Select a repository</option>
+                    {githubRepos.map((repo) => (
+                      <option key={repo.id} value={repo.fullName}>
+                        {repo.fullName} ({repo.defaultBranch})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedRepo
+                      ? `${selectedRepo.fullName} · ${selectedRepo.defaultBranch}`
+                      : `${githubRepos.length} repos available`}
+                  </p>
+                  <Button
+                    disabled={
+                      !selectedRepo ||
+                      scanJobStarting ||
+                      (Boolean(scanJobId) && !scanJobError && scanJobProgress < 100)
+                    }
+                    onClick={() => {
+                      void startCloudScan();
+                    }}
+                  >
+                    {scanJobStarting ? "Starting..." : "Scan"}
+                  </Button>
+                </div>
+
+                {scanJobStatus ? (
+                  <div className="space-y-2 rounded-2xl border border-border bg-[#0a0a0a] p-4">
+                    <div className="flex items-center justify-between gap-4 text-sm">
+                      <span className="font-medium text-white">{getScanProgressLabel(scanJobProgress, scanJobStatus)}</span>
+                      <span className="text-muted-foreground">{scanJobProgress}%</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-[#222222]">
+                      <div
+                        className="h-full rounded-full bg-[#2563EB] transition-all"
+                        style={{ width: `${Math.max(0, Math.min(scanJobProgress, 100))}%` }}
+                      />
+                    </div>
+                    {scanJobError ? (
+                      <p className="text-sm text-[#ef4444]">{scanJobError}</p>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             )}
           </CardContent>

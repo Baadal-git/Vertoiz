@@ -8,6 +8,8 @@ export type ScanJobData = {
   repoUrl: string;
   userId: string;
   scanId: string;
+  githubToken: string;
+  defaultBranch?: string;
 };
 
 export type FixJobData = Record<string, unknown>;

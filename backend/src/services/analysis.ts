@@ -207,7 +207,34 @@ ${ctx.sensitivePatterns.length > 0
   : "No obvious sensitive patterns detected in surface scan"}
 
 API ROUTE HANDLERS (sample):
-${ctx.routeHandlers.slice(0, 20).join("\n") || "none detected"}`;
+${ctx.routeHandlers.slice(0, 20).join("\n") || "none detected"}
+
+SOURCE FILES (sample):
+${formatSourceFiles(ctx.files ?? [])}`;
+}
+
+function formatSourceFiles(files: NonNullable<ScanContext["files"]>): string {
+  if (files.length === 0) {
+    return "No source file contents provided.";
+  }
+
+  let totalChars = 0;
+  const maxTotalChars = 60000;
+  const maxFileChars = 4000;
+  const chunks: string[] = [];
+
+  for (const file of files) {
+    if (totalChars >= maxTotalChars) {
+      break;
+    }
+
+    const content = file.content.slice(0, maxFileChars);
+    const chunk = `--- ${file.path} ---\n${content}`;
+    totalChars += chunk.length;
+    chunks.push(chunk);
+  }
+
+  return chunks.join("\n\n");
 }
 
 function parseAnalysis(raw: string): AnalysisResult {

@@ -1,6 +1,7 @@
 // ScanContext — what the VS Code extension sends to the backend
 export interface ScanContext {
   projectName: string;
+  files?: CodebaseFile[];
   fileTree: string[];
   importGraph: Record<string, string[]>;
   detectedPatterns: {
@@ -35,6 +36,11 @@ export interface ScanContext {
 export interface SensitivePattern {
   file: string;
   pattern: string; // e.g. "hardcoded API key", "secret in frontend bundle"
+}
+
+export interface CodebaseFile {
+  path: string;
+  content: string;
 }
 
 // What comes back from a scan

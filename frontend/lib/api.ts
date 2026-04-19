@@ -1,7 +1,14 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import type { GitHubRepoSummary, ScanListItem, ScanReport, ViolationStatus } from "@/lib/types";
+import type {
+  GitHubRepoSummary,
+  JobStatusResponse,
+  ScanJobResponse,
+  ScanListItem,
+  ScanReport,
+  ViolationStatus,
+} from "@/lib/types";
 
 interface RequestOptions extends Omit<RequestInit, "headers"> {
   headers?: HeadersInit;
@@ -80,7 +87,7 @@ async function request<T>(
   return (await response.json()) as T;
 }
 
-async function githubRequest<T>(
+async function backendRequest<T>(
   path: string,
   getToken: () => Promise<string | null>,
   options: RequestOptions = {},
@@ -92,7 +99,7 @@ async function githubRequest<T>(
   }
 
   const url = `${getBackendBaseUrl()}${path}`;
-  console.log("Vertoiz GitHub API fetch:", {
+  console.log("Vertoiz backend API fetch:", {
     url,
     hasClerkToken: Boolean(token),
   });
@@ -112,7 +119,7 @@ async function githubRequest<T>(
       | { error?: string }
       | null;
 
-    console.log("Vertoiz GitHub API fetch failed:", {
+    console.log("Vertoiz backend API fetch failed:", {
       url,
       status: response.status,
       error: payload?.error ?? null,
@@ -125,7 +132,7 @@ async function githubRequest<T>(
   }
 
   const payload = (await response.json()) as T;
-  console.log("Vertoiz GitHub API fetch succeeded:", { url });
+  console.log("Vertoiz backend API fetch succeeded:", { url });
 
   return payload;
 }
@@ -144,7 +151,17 @@ export function useApiClient() {
         method: "POST",
       }),
     getGitHubRepos: () =>
-      githubRequest<{ repos: GitHubRepoSummary[] }>("/api/github/repos", getToken),
+      backendRequest<{ repos: GitHubRepoSummary[] }>("/api/github/repos", getToken),
+    createScanJob: (repo: { fullName: string; defaultBranch: string }) =>
+      backendRequest<ScanJobResponse>("/api/jobs/scan", getToken, {
+        method: "POST",
+        body: JSON.stringify({
+          repoFullName: repo.fullName,
+          defaultBranch: repo.defaultBranch,
+        }),
+      }),
+    getJobStatus: (jobId: string) =>
+      backendRequest<JobStatusResponse>(`/api/jobs/${jobId}/status`, getToken),
     updateViolationStatus: (violationId: string, status: Extract<ViolationStatus, "approved" | "rejected">) =>
       request<{ id: string; status: string }>(`/api/scans/violations/${violationId}`, getToken, {
         method: "PATCH",

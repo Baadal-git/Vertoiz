@@ -3,13 +3,18 @@ import { type Job, type Queue } from "bullmq";
 import { z } from "zod";
 import { fixQueue, scanQueue, type ScanJobData } from "../queues";
 import { getUserId, requireAuth } from "../middleware/auth";
+import { getGitHubTokenForUser } from "../github/repos";
+import { createScan, getOrCreateProject } from "../services/scan";
 
 export const jobRouter = Router();
 
 const ScanJobSchema = z.object({
-  repoUrl: z.string().min(1).max(2048),
-  userId: z.string().min(1),
-  scanId: z.string().min(1),
+  repoUrl: z.string().min(1).max(2048).optional(),
+  repoFullName: z.string().min(1).max(300).optional(),
+  fullName: z.string().min(1).max(300).optional(),
+  defaultBranch: z.string().min(1).max(200).optional(),
+  userId: z.string().min(1).optional(),
+  scanId: z.string().min(1).optional(),
 });
 
 type QueueEntry = {
@@ -34,18 +39,33 @@ jobRouter.post("/scan", requireAuth, async (req, res) => {
   }
 
   const authenticatedUserId = getUserId(req);
-  const data = parsed.data;
+  const requestedUserId = parsed.data.userId;
 
-  if (data.userId !== authenticatedUserId) {
+  if (requestedUserId && requestedUserId !== authenticatedUserId) {
     res.status(403).json({ error: "Forbidden" });
     return;
   }
 
   try {
-    const job = await scanQueue.add("scan", data);
+    const repoUrl = getRepoIdentifier(parsed.data);
+    const repoFullName = parseGitHubRepoFullName(repoUrl);
+    const githubToken = await getGitHubTokenForUser(authenticatedUserId);
+    const project = await getOrCreateProject(authenticatedUserId, repoFullName);
+    const scan = await createScan(project.id, authenticatedUserId);
+    const data: ScanJobData = {
+      repoUrl: repoFullName,
+      userId: authenticatedUserId,
+      scanId: scan.id,
+      githubToken,
+      defaultBranch: parsed.data.defaultBranch,
+    };
+    const job = await scanQueue.add("scan", data, {
+      attempts: 1,
+    });
 
     res.status(202).json({
       jobId: job.id,
+      scanId: scan.id,
     });
   } catch (err) {
     console.error("Scan job enqueue error:", err);
@@ -107,4 +127,37 @@ function getJobUserId(job: Job): string | undefined {
   const data = job.data as Partial<ScanJobData>;
 
   return typeof data.userId === "string" ? data.userId : undefined;
+}
+
+function getRepoIdentifier(data: z.infer<typeof ScanJobSchema>): string {
+  const repoIdentifier = data.repoFullName ?? data.fullName ?? data.repoUrl;
+
+  if (!repoIdentifier) {
+    throw new Error("repoUrl, repoFullName, or fullName is required");
+  }
+
+  return repoIdentifier;
+}
+
+function parseGitHubRepoFullName(repoIdentifier: string): string {
+  const trimmed = repoIdentifier.trim();
+  const directMatch = trimmed.match(/^([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/);
+
+  if (directMatch) {
+    return directMatch[1];
+  }
+
+  const url = new URL(trimmed);
+
+  if (url.hostname !== "github.com") {
+    throw new Error("Only github.com repositories are supported");
+  }
+
+  const fullName = url.pathname.replace(/^\/+/, "").replace(/\.git$/, "");
+
+  if (!/^([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/.test(fullName)) {
+    throw new Error("Invalid GitHub repository name");
+  }
+
+  return fullName;
 }

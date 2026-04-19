@@ -1,7 +1,14 @@
-import { Octokit } from "@octokit/rest";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "../db";
 import { userTokens } from "../db/schema";
+
+type OctokitClass = typeof import("@octokit/rest")["Octokit"];
+
+// The backend is compiled as CommonJS, while @octokit/rest is ESM-only.
+// Use a native dynamic import so Node 18 can load it without require().
+const importOctokitRest = new Function(
+  'return import("@octokit/rest")'
+) as () => Promise<{ Octokit: OctokitClass }>;
 
 export type GitHubRepoSummary = {
   id: number;
@@ -20,26 +27,11 @@ export class GitHubNotConnectedError extends Error {
 export async function listUserRepos(
   userId: string
 ): Promise<GitHubRepoSummary[]> {
-  const [githubToken] = await db
-    .select({
-      token: userTokens.token,
-    })
-    .from(userTokens)
-    .where(and(eq(userTokens.userId, userId), eq(userTokens.type, "github")))
-    .orderBy(desc(userTokens.createdAt))
-    .limit(1);
-
-  console.log("GitHub token lookup:", {
-    userId,
-    hasGitHubToken: Boolean(githubToken),
-  });
-
-  if (!githubToken) {
-    throw new GitHubNotConnectedError();
-  }
+  const token = await getGitHubTokenForUser(userId);
+  const { Octokit } = await importOctokitRest();
 
   const octokit = new Octokit({
-    auth: githubToken.token,
+    auth: token,
   });
 
   try {
@@ -70,4 +62,26 @@ export async function listUserRepos(
     });
     throw err;
   }
+}
+
+export async function getGitHubTokenForUser(userId: string): Promise<string> {
+  const [githubToken] = await db
+    .select({
+      token: userTokens.token,
+    })
+    .from(userTokens)
+    .where(and(eq(userTokens.userId, userId), eq(userTokens.type, "github")))
+    .orderBy(desc(userTokens.createdAt))
+    .limit(1);
+
+  console.log("GitHub token lookup:", {
+    userId,
+    hasGitHubToken: Boolean(githubToken),
+  });
+
+  if (!githubToken) {
+    throw new GitHubNotConnectedError();
+  }
+
+  return githubToken.token;
 }

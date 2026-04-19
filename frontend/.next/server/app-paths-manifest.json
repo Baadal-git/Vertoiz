@@ -1,11 +1,11 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
+  "/sign-in/[[...sign-in]]/page": "app/sign-in/[[...sign-in]]/page.js",
   "/sign-up/[[...sign-up]]/page": "app/sign-up/[[...sign-up]]/page.js",
   "/page": "app/page.js",
   "/api/github/connect/route": "app/api/github/connect/route.js",
-  "/sign-in/[[...sign-in]]/page": "app/sign-in/[[...sign-in]]/page.js",
-  "/(app)/scan/[scanId]/page": "app/(app)/scan/[scanId]/page.js",
-  "/(app)/dashboard/settings/page": "app/(app)/dashboard/settings/page.js",
   "/(app)/dashboard/page": "app/(app)/dashboard/page.js",
-  "/(app)/dashboard/api-keys/page": "app/(app)/dashboard/api-keys/page.js"
+  "/(app)/dashboard/api-keys/page": "app/(app)/dashboard/api-keys/page.js",
+  "/(app)/dashboard/settings/page": "app/(app)/dashboard/settings/page.js",
+  "/(app)/scan/[scanId]/page": "app/(app)/scan/[scanId]/page.js"
 }
